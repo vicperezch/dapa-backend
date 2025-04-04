@@ -1,0 +1,6 @@
+services:
+  go:
+    build: .
+    container_name: dapa_backend
+    ports:
+      - "8080:8080" # Exposes Go Backend on port 8080
