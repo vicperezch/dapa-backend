@@ -5,9 +5,9 @@ WORKDIR /app
 COPY /src/go.* ./
 RUN go mod download
 
-COPY . .
+COPY ./src/ .
 
-RUN go build -o main ./src/cmd/main.go
+RUN go build -o main ./cmd/main.go
 
 EXPOSE 8080
 
