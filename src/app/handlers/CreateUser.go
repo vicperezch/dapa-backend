@@ -3,9 +3,9 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"dapa/src/cmd/app/models"
-	"dapa/src/cmd/app/utils"
-	"dapa/src/cmd/app/database"
+	"dapa/app/models"
+	"dapa/app/utils"
+	"dapa/database"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,7 +28,7 @@ func CreateUser(c *gin.Context) {
 	}
 
 	result := db.Exec(
-		"INSERT INTO users (name, lastName, phone, email) VALUES ($1, $2, $3, COALESCE(NULLIF($4, ''), DEFAULT))",
+		"INSERT INTO users (name, last_name, phone, email) VALUES ($1, $2, $3, NULLIF($4, ''))",
 		req.Name, req.LastName, req.Phone, req.Email,
 	)
 

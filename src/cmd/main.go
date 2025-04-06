@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dapa/src/cmd/app/handlers"
+	"dapa/app/handlers"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
