@@ -2,7 +2,7 @@
 
 Este repositorio contiene la aplicación backend del proyecto **DAPA**, desarrollada en **Go (Golang)** utilizando el framework **Gin**, y preparada para ejecutarse mediante **Docker**.
 
-## Comenzando 🚀
+## Comenzando 
 
 1. Clona el repositorio:
 
@@ -17,7 +17,7 @@ cd dapa-backend
 go mod tidy
 ```
 
-## Configuración del Proyecto ⚙️
+## Configuración del Proyecto 
 
 1. Asegúrate de tener configurado el archivo `.env` si es necesario. Un ejemplo puede ser:
 
@@ -53,7 +53,7 @@ Y deberías ver una respuesta como esta:
 {"message": "pong"}
 ```
 
-## Docker 🐳
+## Docker 
 
 ### Construir y levantar el contenedor con Docker
 
@@ -67,7 +67,7 @@ docker compose up --build
 docker compose down
 ```
 
-## Endpoints disponibles 🧩
+## Endpoints disponibles
 
 Actualmente disponibles:
 
