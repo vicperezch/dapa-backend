@@ -75,7 +75,7 @@ Actualmente disponibles:
 - `GET /api/user`: Obtener lista de usuarios.
 - `GET /api/ping`: (Si fue añadido) Endpoint de prueba para verificar conexión.
 
-## Notas adicionales 📝
+## Notas adicionales
 
 - Este backend está diseñado para ser consumido por el frontend del proyecto DAPA.
 - Asegúrate de que tanto el frontend como el backend estén utilizando la misma URL base para facilitar la comunicación entre ambos servicios.
