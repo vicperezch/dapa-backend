@@ -1,39 +1,39 @@
 # DAPA Backend
 
-Este repositorio contiene la aplicación backend del proyecto **DAPA**, desarrollada en **Go (Golang)** utilizando el framework **Gin**, y preparada para ejecutarse mediante **Docker**.
+This repository contains the backend of the DAPA application developed using **Go** with the **Gin** framework, as well as its setup and execution using **Docker**.
 
-## Comenzando 
+## Getting started
 
-1. Clona el repositorio:
+1. Clone the repository 
 
 ```bash
 git clone https://github.com/JuanDsm04/dapa-backend
 cd dapa-backend
 ```
 
-2. Instala las dependencias necesarias:
+2. Install dependencies
 
 ```bash
 go mod tidy
 ```
 
-## Configuración del Proyecto 
+## Project Setup
 
-1. Asegúrate de tener configurado el archivo `.env` si es necesario. Un ejemplo puede ser:
+1. Make sure to configure your `.env` file if needed. Example:
 
 ```bash
 PORT=8080
 ```
 
-Por defecto, el servidor se ejecuta en `http://localhost:8080`.
+By default, the server will run on `http://localhost:8080`.
 
-2. Para ejecutar el servidor localmente:
+2. Run the project locally
 
 ```bash
 go run src/cmd/main.go
 ```
 
-3. Puedes agregar un endpoint de prueba para verificar que todo funcione correctamente. Añade lo siguiente en tu archivo `main.go`:
+To test if the backend is working correctly, you can add a basic test endpoint in `main.go`:
 
 ```go
 router.GET("/api/ping", func(c *gin.Context) {
@@ -41,43 +41,26 @@ router.GET("/api/ping", func(c *gin.Context) {
 })
 ```
 
-Luego accede a:
+Then visit:
 
 ```
 http://localhost:8080/api/ping
 ```
 
-Y deberías ver una respuesta como esta:
+You should receive the following response:
 
 ```json
 {"message": "pong"}
 ```
 
-## Docker 
-
-### Construir y levantar el contenedor con Docker
+### Build and serve through Docker
 
 ```bash
 docker compose up --build
 ```
 
-### Detener los servicios de Docker Compose
+### Stop Docker Compose
 
 ```bash
 docker compose down
 ```
-
-## Endpoints disponibles
-
-Actualmente disponibles:
-
-- `POST /api/user`: Crear un nuevo usuario.
-- `GET /api/user`: Obtener lista de usuarios.
-- `GET /api/ping`: (Si fue añadido) Endpoint de prueba para verificar conexión.
-
-## Notas adicionales
-
-- Este backend está diseñado para ser consumido por el frontend del proyecto DAPA.
-- Asegúrate de que tanto el frontend como el backend estén utilizando la misma URL base para facilitar la comunicación entre ambos servicios.
-- Si usas Docker, asegúrate de que los servicios estén correctamente configurados en `docker-compose.yml`.
-
