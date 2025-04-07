@@ -6,6 +6,7 @@ COPY /src/go.* ./
 RUN go mod download
 
 COPY ./src/ .
+COPY .env ./
 
 RUN go build -o main ./cmd/main.go
 

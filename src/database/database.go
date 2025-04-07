@@ -12,7 +12,7 @@ import (
 var db *gorm.DB
 
 func ConnectToDataBase() *gorm.DB  {
-  env := godotenv.Load("../../.env")
+  env := godotenv.Load(".env")
   if env != nil {
     panic("Error al cargar el archivo .env")
 }
@@ -20,7 +20,7 @@ func ConnectToDataBase() *gorm.DB  {
   POSTGRES_PASSWORD := os.Getenv("POSTGRES_PASSWORD")
   POSTGRES_DB := os.Getenv("POSTGRES_DB")
 
-  dsn := "host=localhost user=" +POSTGRES_USER+" password="+POSTGRES_PASSWORD+" dbname="+POSTGRES_DB+" port=5432 sslmode=disable TimeZone=UTC"
+  dsn := "host=database user=" +POSTGRES_USER+" password="+POSTGRES_PASSWORD+" dbname="+POSTGRES_DB+" port=5432 sslmode=disable TimeZone=UTC"
   var err error
 
   db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
