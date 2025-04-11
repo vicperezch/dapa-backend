@@ -1,6 +1,40 @@
+
 services:
+  
+  database:
+    build:
+      context: ../dapa-database
+      dockerfile: Dockerfile
+    env_file:
+      - ../dapa-database/.env
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   go:
-    build: .
+    build:
+      context: . 
+      dockerfile: Dockerfile
     container_name: dapa_backend
     ports:
-      - "8080:8080" # Exposes Go Backend on port 8080
+      - "8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=database
+      - DB_PORT=5432
+    networks:
+      - app-network
+
+
+networks:
+  app-network:
+    driver: bridge

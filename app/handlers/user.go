@@ -1,25 +1,31 @@
 package handlers
 
 import (
-	"log"
-	"net/http"
 	"dapa/app/models"
 	"dapa/app/utils"
 	"dapa/database"
+	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-type CreateUserRequest struct {
-	Name     string `json:"name" binding:"required"`
-	LastName string `json:"lastName" binding:"required"`
-	Phone    string `json:"phone" binding:"required"`
-	Email    string `json:"email"`
+func GetUsers(c *gin.Context) {
+	db := database.ConnectToDatabase()
+	var users []models.User
+
+	if err := db.Find(&users).Error; err != nil {
+		log.Println("Error fetching users:", err)
+		utils.RespondWithError(c, "Error getting all users", http.StatusInternalServerError)
+		return
+	}
+
+	utils.RespondWithJSON(c, users)
 }
 
 func CreateUser(c *gin.Context) {
-	db := database.ConnectToDataBase()
-	var req CreateUserRequest
+	db := database.ConnectToDatabase()
+	var req models.CreateUserRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Println("Error parsing request:", err)
