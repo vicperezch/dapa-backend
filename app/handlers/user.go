@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"dapa/app/models"
+	"dapa/app/model"
 	"dapa/app/utils"
 	"dapa/database"
 	"log"
@@ -12,7 +12,7 @@ import (
 
 func GetUsers(c *gin.Context) {
 	db := database.ConnectToDatabase()
-	var users []models.User
+	var users []model.User
 
 	if err := db.Find(&users).Error; err != nil {
 		log.Println("Error fetching users:", err)
@@ -25,7 +25,7 @@ func GetUsers(c *gin.Context) {
 
 func CreateUser(c *gin.Context) {
 	db := database.ConnectToDatabase()
-	var req models.CreateUserRequest
+	var req model.CreateUserRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Println("Error parsing request:", err)
@@ -44,7 +44,7 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	utils.RespondWithJSON(c, models.ApiResponse{
+	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
 		Message: "Successfully created user",
 	})
