@@ -39,6 +39,7 @@ func main() {
 	// Endpoints de API reales
 	api := router.Group("/api")
 	{
+		api.POST("/login", handlers.LoginHandler)
 		api.POST("/users", handlers.RegisterHandler)
 		api.GET("/users", handlers.GetUsers)
 	}
