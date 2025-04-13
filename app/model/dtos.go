@@ -21,3 +21,8 @@ type ApiResponse struct {
 	Message string `json:"message,omitempty"`
 	Data    any    `json:"data,omitempty"`
 }
+
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,password"`
+}

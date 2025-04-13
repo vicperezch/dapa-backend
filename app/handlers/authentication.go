@@ -64,3 +64,39 @@ func RegisterHandler(c *gin.Context) {
 		Message: "User created successfully",
 	})
 }
+
+func LoginHandler(c *gin.Context) {
+	db := database.ConnectToDatabase()
+
+	var req model.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Println("Error parsing request: ", err)
+		utils.RespondWithError(c, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	var employee model.Employee
+
+	err := db.Preload("User").
+		Joins("JOIN users ON users.id = employees.user_id").
+		Where("users.email = ?", req.Email).
+		First(&employee).Error
+
+	if err != nil {
+		log.Println("Error finding user: ", err)
+		utils.RespondWithError(c, "Invalid email or password", http.StatusUnauthorized)
+		return
+	}
+
+	if !utils.CheckPassword(req.Password, employee.Password) {
+		utils.RespondWithError(c, "Invalid email or password", http.StatusUnauthorized)
+		return
+	}
+
+	// Generate JWT token
+
+	utils.RespondWithJSON(c, model.ApiResponse{
+		Success: true,
+		Message: "Login successful",
+	})
+}
