@@ -1,5 +1,14 @@
 package model
 
+type RegisterRequest struct {
+	Name     string `json:"name" binding:"required"`
+	LastName string `json:"lastName" binding:"required"`
+	Phone    string `json:"phone" binding:"required,phone"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,password"`
+	Role     string `json:"role" binding:"required,validrole"`
+}
+
 type CreateUserRequest struct {
 	Name     string `json:"name" binding:"required"`
 	LastName string `json:"lastName" binding:"required"`
