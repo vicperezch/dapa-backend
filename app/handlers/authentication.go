@@ -75,6 +75,16 @@ func RegisterHandler(c *gin.Context) {
 	})
 }
 
+// @Summary		Login for employees.
+// @Description	Authenticates an employee and returns a JWT token.
+// @Tags		auth
+// @Accept		json
+// @Produce		json
+// @Param		login body model.LoginRequest true "Credentials for login"
+// @Success		200	{object} model.ApiResponse "Login successful"
+// @Failure		400	{object} model.ApiResponse "Invalid request format"
+// @Failure		401	{object} model.ApiResponse "Invalid email or password"
+// @Router		/login/ [post]
 func LoginHandler(c *gin.Context) {
 	db := database.ConnectToDatabase()
 
