@@ -12,6 +12,16 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// @Summary		Register a new employee.
+// @Description	Creates a new employee entry in the database.
+// @Tags		users
+// @Accept		json
+// @Produce		json
+// @Param		register body model.RegisterRequest true "Required information to register user."
+// @Success		200	{object} model.ApiResponse "Employee registered successfully."
+// @Failure		400	{object} model.ApiResponse "Request did not pass the validations."
+// @Failure		500	{object} model.ApiResponse "Error when trying to register user."
+// @Router		/users/ [post]
 func RegisterHandler(c *gin.Context) {
 	db := database.ConnectToDatabase()
 
