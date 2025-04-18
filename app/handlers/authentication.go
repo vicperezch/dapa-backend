@@ -113,10 +113,15 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	// Generate JWT token
+	token, err := utils.GenerateToken(&employee)
+	if err != nil {
+		utils.RespondWithError(c,"Failed to generate token", http.StatusInternalServerError)
+		return
+	}
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
 		Message: "Login successful",
+		Data: token,
 	})
 }
