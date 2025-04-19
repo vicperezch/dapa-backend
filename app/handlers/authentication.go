@@ -23,11 +23,18 @@ import (
 // @Failure		500	{object} model.ApiResponse "Error when trying to register user."
 // @Router		/users/ [post]
 func RegisterHandler(c *gin.Context) {
+	claims := c.MustGet("claims").(*model.EmployeeClaims)
+	
+	if claims.Role != "admin" {
+		utils.RespondWithError(c,"Insufficient permissions",http.StatusForbidden )
+		return
+	}
+	
 	db := database.ConnectToDatabase()
 
 	var req model.RegisterRequest
 	var err error
-
+	
 	if err = c.ShouldBindJSON(&req); err != nil {
 		log.Println("Error parsing request: ", err)
 

@@ -1,30 +1,70 @@
-package middleware
+package middlewares
 
 import (
-	"context"
 	"net/http"
 	
 	"dapa/app/utils"
+	"dapa/app/model"
+
+	"github.com/gin-gonic/gin"
 )
 
 //Middleware de autenticación que corrobora que el token exista y sea válido
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenString := extractToken(r)
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := extractToken(c.Request)
 		if tokenString == "" {
-			utils.RespondWithError(w, "Authorization token required", http.StatusUnauthorized)
+			utils.RespondWithError(c, "Authorization token required", http.StatusUnauthorized)
+			c.Abort()
 			return
 		}
 
 		claims, err := utils.ValidateToken(tokenString)
 		if err != nil {
-			utils.RespondWithError(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+			utils.RespondWithError(c, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+			c.Abort()
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "claims", claims)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+		// Almacenar claims en el contexto de Gin
+		c.Set("claims", claims)
+		c.Next()
+	}
+}
+
+//Middleware que verifica roles
+func RoleRequired(roles ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claimsInterface, exists := c.Get("claims")
+		if !exists {
+			utils.RespondWithError(c, "Claims not found", http.StatusUnauthorized)
+			c.Abort()
+			return
+		}
+
+		claims, ok := claimsInterface.(*model.EmployeeClaims)
+		if !ok {
+			utils.RespondWithError(c, "Invalid claims format", http.StatusInternalServerError)
+			c.Abort()
+			return
+		}
+
+		hasRole := false
+		for _, role := range roles {
+			if claims.Role == role {
+				hasRole = true
+				break
+			}
+		}
+
+		if !hasRole {
+			utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
 }
 
 //Función que obtiene el token del header y retira los caracteres innecesarios

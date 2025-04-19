@@ -11,6 +11,13 @@ import (
 )
 
 func GetUsers(c *gin.Context) {
+	claims := c.MustGet("claims").(*model.EmployeeClaims)
+	
+	if claims.Role != "admin" {
+		utils.RespondWithError(c,"Insufficient permissions",http.StatusForbidden )
+		return
+	}
+
 	db := database.ConnectToDatabase()
 	var users []model.User
 

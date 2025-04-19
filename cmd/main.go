@@ -1,9 +1,15 @@
 package main
 
 import (
-	"dapa/app/handlers"
+	"log"
+
 	"dapa/app/utils"
+	"dapa/app/routes"
+	"dapa/database"
 	_ "dapa/docs"
+
+	"dapa/app/model"
+	"gorm.io/gorm"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -38,24 +44,44 @@ func main() {
 		v.RegisterValidation("phone", utils.PhoneValidator)
 	}
 
-	// Ping endpoint para probar conexión
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "¡Backend conectado con éxito!",
-		})
-	})
-
-	// Endpoints de API reales
-	api := router.Group("/api")
-	{
-		api.POST("/login", handlers.LoginHandler)
-		api.POST("/users", handlers.RegisterHandler)
-		api.GET("/users", handlers.GetUsers)
+	db := database.ConnectToDatabase()
+	if err := CreateFirstAdmin(db); err != nil {
+		log.Fatal("Error creando admin inicial: ", err)
 	}
+
+	// Configurar rutas
+	routes.SetupRoutes(router)
 
 	// Endpoint para documentación
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Iniciar servidor
 	router.Run(":8080")
+}
+
+func CreateFirstAdmin(db *gorm.DB) error {
+	// Verificar si ya existe un admin
+	var count int64
+	db.Model(&model.Employee{}).Where("role = ?", "admin").Count(&count)
+	
+	if count > 0 {
+		return nil // Ya existe admin
+	}
+
+	hashedPassword, err := utils.HashPassword("dapa12345")
+	if err != nil {
+		return err
+	}
+
+	admin := model.Employee{
+		User: model.User{
+			Name:     "Admin",
+			Email:    "admin@dapa.com",
+			Phone:    "0000000000",
+		},
+		Password: hashedPassword,
+		Role:     "admin",
+	}
+
+	return db.Create(&admin).Error
 }
