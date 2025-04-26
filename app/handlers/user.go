@@ -56,3 +56,24 @@ func CreateUser(c *gin.Context) {
 		Message: "Successfully created user",
 	})
 }
+
+func GetUserById(c *gin.Context) {
+	claims := c.MustGet("claims").(*model.EmployeeClaims)
+
+	if claims.Role != "admin" {
+		utils.RespondWithError(c,"Insufficient permissions",http.StatusForbidden )
+		return
+	}
+
+	db := database.ConnectToDatabase()
+	var user model.User
+
+	id := c.Param("id")
+	if err := db.First(&user, id).Error; err != nil {
+		log.Println("Error fetching user:", err)
+		utils.RespondWithError(c, "Error getting user", http.StatusInternalServerError)
+		return
+	}
+
+	utils.RespondWithJSON(c, user)
+}
