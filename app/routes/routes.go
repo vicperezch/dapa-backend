@@ -25,6 +25,9 @@ func SetupRoutes(router *gin.Engine) {
 		protected := api.Group("")
 		protected.Use(middlewares.AuthMiddleware())
 		{
+
+			// Rutas que pueden ser accedidas por cualquier rol
+			protected.PUT("/users/:id", handlers. UpdateUser)
 			
 			// Rutas que solo el rol admin puede tener
 			admin := protected.Group("")

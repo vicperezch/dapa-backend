@@ -16,6 +16,14 @@ type CreateUserRequest struct {
 	Email    string `json:"email"`
 }
 
+type UpdateUserRequest struct {
+	Name     string `json:"name" binding:"required"`
+	LastName string `json:"lastName" binding:"required"`
+	Phone    string `json:"phone" binding:"required"`
+	Email    string `json:"email"`
+	Role     string `json:"role" binding:"required,validrole"`
+}
+
 type ApiResponse struct {
 	Success bool   `json:"success,omitempty"`
 	Message string `json:"message,omitempty"`

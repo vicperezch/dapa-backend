@@ -77,3 +77,59 @@ func GetUserById(c *gin.Context) {
 
 	utils.RespondWithJSON(c, user)
 }
+
+func UpdateUser(c *gin.Context) {
+	claims := c.MustGet("claims").(*model.EmployeeClaims)
+
+	db := database.ConnectToDatabase()
+	var req model.UpdateUserRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Println("Error parsing request:", err)
+		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
+		return
+	}
+
+	id := c.Param("id")
+
+	if claims.Role == "admin" {
+		result := db.Exec(
+			"UPDATE users SET name = $1, last_name = $2, phone = $3, email = NULLIF($4, '') WHERE id = $5",
+			req.Name, req.LastName, req.Phone, req.Email, id,
+		)
+	
+		if result.Error != nil {
+			log.Println("Error updating user:", result.Error)
+			utils.RespondWithError(c, "Error updating user", http.StatusInternalServerError)
+			return
+		}
+	
+		result = db.Exec(
+			"UPDATE employees SET role = $1 WHERE user_id = $2",
+			req.Role, id,
+		)
+	
+		if result.Error != nil {
+			log.Println("Error updating employee role:", result.Error)
+			utils.RespondWithError(c, "Error updating user role", http.StatusInternalServerError)
+			return
+		}
+	
+	} else {
+		result := db.Exec(
+			"UPDATE users SET name = $1, last_name = $2, phone = $3, email = NULLIF($4, '') WHERE id = $5",
+			req.Name, req.LastName, req.Phone, req.Email, id,
+		)
+	
+		if result.Error != nil {
+			log.Println("Error updating user:", result.Error)
+			utils.RespondWithError(c, "Error updating user", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	utils.RespondWithJSON(c, model.ApiResponse{
+		Success: true,
+		Message: "Successfully updated user",
+	})
+}
