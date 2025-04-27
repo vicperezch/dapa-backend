@@ -20,9 +20,11 @@ services:
     build:
       context: . 
       dockerfile: Dockerfile
-    container_name: dapa_backend
+    container_name: dapa_go
     ports:
       - "8080:8080"
+    volumes:
+      - ../dapa-database/migrations/:/database/migrations
     depends_on:
       database:
         condition: service_healthy
