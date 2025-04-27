@@ -1,66 +1,39 @@
 # DAPA Backend
-
 This repository contains the backend of the DAPA application developed using **Go** with the **Gin** framework, as well as its setup and execution using **Docker**.
 
 ## Getting started
+The project includes a `docker-compose.yml` file to run the application and its database with Docker.
 
-1. Clone the repository 
+### Prerequisites
+- Git
+- Docker
+- Docker Compose
 
+### Installation
+1. **Clone** both the backend and database repositories. 
 ```bash
-git clone https://github.com/JuanDsm04/dapa-backend
+git clone https://github.com/JuanDsm04/dapa-backend.git
+git clone https://github.com/vicperezch/dapa-database.git
 cd dapa-backend
 ```
 
-2. Install dependencies
+2. **Create** the `.env` file in the root of the project.
+```env
+POSTGRES_USER=youruser
+POSTGRES_DB=yourdb
+POSTGRES_PASSWORD=yourpassword
+JWT_SECRET=yoursecret
+```
 
+3. **Build** and serve using Docker. By default, the server will run on `http://localhost:8080`.
 ```bash
-go mod tidy
+docker-compose up --build
 ```
 
-## Project Setup
-
-1. Make sure to configure your `.env` file if needed. Example:
-
+4. **Stop** the containers.
 ```bash
-PORT=8080
+docker-compose down
 ```
 
-By default, the server will run on `http://localhost:8080`.
-
-2. Run the project locally
-
-```bash
-go run src/cmd/main.go
-```
-
-To test if the backend is working correctly, you can add a basic test endpoint in `main.go`:
-
-```go
-router.GET("/api/ping", func(c *gin.Context) {
-  c.JSON(200, gin.H{"message": "pong"})
-})
-```
-
-Then visit:
-
-```
-http://localhost:8080/api/ping
-```
-
-You should receive the following response:
-
-```json
-{"message": "pong"}
-```
-
-### Build and serve through Docker
-
-```bash
-docker compose up --build
-```
-
-### Stop Docker Compose
-
-```bash
-docker compose down
-```
+## Usage
+The API uses **Swagger** to provide documentation. To access it and view the available endpoints go to `http://localhost:8080/swagger/index.html` after running the containers.
