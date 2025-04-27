@@ -6,10 +6,8 @@ import (
 	"dapa/app/utils"
 	"dapa/app/routes"
 	"dapa/database"
-	_ "dapa/docs"
-
 	"dapa/app/model"
-	"gorm.io/gorm"
+	_ "dapa/docs"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -44,8 +42,8 @@ func main() {
 		v.RegisterValidation("phone", utils.PhoneValidator)
 	}
 
-	db := database.ConnectToDatabase()
-	if err := CreateFirstAdmin(db); err != nil {
+	database.ConnectToDatabase()
+	if err := CreateFirstAdmin(); err != nil {
 		log.Fatal("Error creando admin inicial: ", err)
 	}
 
@@ -59,9 +57,10 @@ func main() {
 	router.Run(":8080")
 }
 
-func CreateFirstAdmin(db *gorm.DB) error {
+func CreateFirstAdmin() error {
 	// Verificar si ya existe un admin
 	var count int64
+	db := database.DB
 	db.Model(&model.Employee{}).Where("role = ?", "admin").Count(&count)
 	
 	if count > 0 {

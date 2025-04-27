@@ -26,10 +26,9 @@ func GetUsers(c *gin.Context) {
 		return
 	}
 
-	db := database.ConnectToDatabase()
 	var users []model.User
 
-	if err := db.Find(&users).Error; err != nil {
+	if err := database.DB.Find(&users).Error; err != nil {
 		log.Println("Error fetching users:", err)
 		utils.RespondWithError(c, "Error getting all users", http.StatusInternalServerError)
 		return
@@ -55,11 +54,10 @@ func GetUserById(c *gin.Context) {
 		return
 	}
 
-	db := database.ConnectToDatabase()
 	var user model.User
 
 	id := c.Param("id")
-	if err := db.First(&user, id).Error; err != nil {
+	if err := database.DB.First(&user, id).Error; err != nil {
 		log.Println("Error fetching user:", err)
 		utils.RespondWithError(c, "Error getting user", http.StatusInternalServerError)
 		return
@@ -79,7 +77,6 @@ func GetUserById(c *gin.Context) {
 // @Failure		500	{object} model.ApiResponse "Error creating new user"
 // @Router		/users/ [post]
 func CreateUser(c *gin.Context) {
-	db := database.ConnectToDatabase()
 	var req model.CreateUserRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -88,7 +85,7 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	result := db.Exec(
+	result := database.DB.Exec(
 		"INSERT INTO users (name, last_name, phone, email) VALUES ($1, $2, $3, NULLIF($4, ''))",
 		req.Name, req.LastName, req.Phone, req.Email,
 	)
@@ -119,7 +116,6 @@ func CreateUser(c *gin.Context) {
 func UpdateUser(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 
-	db := database.ConnectToDatabase()
 	var req model.UpdateUserRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -131,7 +127,7 @@ func UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 
 	if claims.Role == "admin" {
-		result := db.Exec(
+		result := database.DB.Exec(
 			"UPDATE users SET name = $1, last_name = $2, phone = $3, email = NULLIF($4, '') WHERE id = $5",
 			req.Name, req.LastName, req.Phone, req.Email, id,
 		)
@@ -142,7 +138,7 @@ func UpdateUser(c *gin.Context) {
 			return
 		}
 	
-		result = db.Exec(
+		result = database.DB.Exec(
 			"UPDATE employees SET role = $1 WHERE user_id = $2",
 			req.Role, id,
 		)
@@ -154,7 +150,7 @@ func UpdateUser(c *gin.Context) {
 		}
 	
 	} else {
-		result := db.Exec(
+		result := database.DB.Exec(
 			"UPDATE users SET name = $1, last_name = $2, phone = $3, email = NULLIF($4, '') WHERE id = $5",
 			req.Name, req.LastName, req.Phone, req.Email, id,
 		)
@@ -189,10 +185,9 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	db := database.ConnectToDatabase()
 	id := c.Param("id")
 
-	result := db.Exec("DELETE FROM users WHERE id = $1", id)
+	result := database.DB.Exec("DELETE FROM users WHERE id = $1", id)
 	if result.Error != nil {
 		log.Println("Error deleting user:", result.Error)
 		utils.RespondWithError(c, "Error deleting user", http.StatusInternalServerError)

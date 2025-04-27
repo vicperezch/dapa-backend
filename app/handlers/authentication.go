@@ -29,8 +29,6 @@ func RegisterHandler(c *gin.Context) {
 		utils.RespondWithError(c,"Insufficient permissions",http.StatusForbidden )
 		return
 	}
-	
-	db := database.ConnectToDatabase()
 
 	var req model.RegisterRequest
 	var err error
@@ -71,7 +69,7 @@ func RegisterHandler(c *gin.Context) {
 		Password: passwordHash,
 		Role:     req.Role,
 	}
-	if err = db.Create(&employee).Error; err != nil {
+	if err = database.DB.Create(&employee).Error; err != nil {
 		utils.RespondWithError(c, "Error registering user", http.StatusInternalServerError)
 		return
 	}
@@ -93,8 +91,6 @@ func RegisterHandler(c *gin.Context) {
 // @Failure		401	{object} model.ApiResponse "Invalid email or password"
 // @Router		/login/ [post]
 func LoginHandler(c *gin.Context) {
-	db := database.ConnectToDatabase()
-
 	var req model.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Println("Error parsing request: ", err)
@@ -104,7 +100,7 @@ func LoginHandler(c *gin.Context) {
 
 	var employee model.Employee
 
-	err := db.Preload("User").
+	err := database.DB.Preload("User").
 		Joins("JOIN users ON users.id = employees.user_id").
 		Where("users.email = ?", req.Email).
 		First(&employee).Error

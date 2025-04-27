@@ -9,20 +9,18 @@ import (
 	"gorm.io/gorm"
 )
 
-var db *gorm.DB
+var DB *gorm.DB
 
-func ConnectToDatabase() *gorm.DB {
+func ConnectToDatabase() {
 	dsn := 
 		"host=database user=" + utils.EnvMustGet("POSTGRES_USER") + 
 		" password=" + utils.EnvMustGet("POSTGRES_PASSWORD") + 
 		" dbname=" + utils.EnvMustGet("POSTGRES_DB") + " port=5432 sslmode=disable TimeZone=UTC"
 	var err error
 
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		log.Fatal("Failed to connect to DB", err)
 	}
-
-	return db
 }
