@@ -8,6 +8,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"time"
 )
 
 // @Summary		Get all users
@@ -85,13 +87,15 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	result := database.DB.Exec(
-		"INSERT INTO users (name, last_name, phone, email) VALUES ($1, $2, $3, NULLIF($4, ''))",
-		req.Name, req.LastName, req.Phone, req.Email,
-	)
+	user := model.User{
+		Name:     req.Name,
+		LastName: req.LastName,
+		Phone:    req.Phone,
+		Email:    req.Email,
+	}
 
-	if result.Error != nil {
-		log.Println("Error creating new user:", result.Error)
+	if err := database.DB.Create(&user).Error; err != nil {
+		log.Println("Error creating new user:", err)
 		utils.RespondWithError(c, "Error creating new user", http.StatusInternalServerError)
 		return
 	}
@@ -117,7 +121,6 @@ func UpdateUser(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 
 	var req model.UpdateUserRequest
-
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Println("Error parsing request:", err)
 		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
@@ -126,38 +129,29 @@ func UpdateUser(c *gin.Context) {
 
 	id := c.Param("id")
 
+	var user model.User
+	if err := database.DB.First(&user, id).Error; err != nil {
+		log.Println("Error finding user:", err)
+		utils.RespondWithError(c, "User not found", http.StatusInternalServerError)
+		return
+	}
+
+	user.Name = req.Name
+	user.LastName = req.LastName
+	user.Phone = req.Phone
+	user.Email = req.Email
+	user.LastModifiedAt = time.Now()
+
+	if err := database.DB.Save(&user).Error; err != nil {
+		log.Println("Error updating user:", err)
+		utils.RespondWithError(c, "Error updating user", http.StatusInternalServerError)
+		return
+	}
+
 	if claims.Role == "admin" {
-		result := database.DB.Exec(
-			"UPDATE users SET name = $1, last_name = $2, phone = $3, email = NULLIF($4, '') WHERE id = $5",
-			req.Name, req.LastName, req.Phone, req.Email, id,
-		)
-	
-		if result.Error != nil {
-			log.Println("Error updating user:", result.Error)
-			utils.RespondWithError(c, "Error updating user", http.StatusInternalServerError)
-			return
-		}
-	
-		result = database.DB.Exec(
-			"UPDATE employees SET role = $1 WHERE user_id = $2",
-			req.Role, id,
-		)
-	
-		if result.Error != nil {
-			log.Println("Error updating employee role:", result.Error)
+		if err := database.DB.Model(&model.Employee{}).Where("user_id = ?", id).Update("role", req.Role).Error; err != nil {
+			log.Println("Error updating employee role:", err)
 			utils.RespondWithError(c, "Error updating user role", http.StatusInternalServerError)
-			return
-		}
-	
-	} else {
-		result := database.DB.Exec(
-			"UPDATE users SET name = $1, last_name = $2, phone = $3, email = NULLIF($4, '') WHERE id = $5",
-			req.Name, req.LastName, req.Phone, req.Email, id,
-		)
-	
-		if result.Error != nil {
-			log.Println("Error updating user:", result.Error)
-			utils.RespondWithError(c, "Error updating user", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -168,14 +162,14 @@ func UpdateUser(c *gin.Context) {
 	})
 }
 
-// @Summary		Delete user by ID
-// @Description	Deletes the user based on the given ID.
+// @Summary		Mark user as inactive
+// @Description	Marks the user as inactive instead of permanently deleting.
 // @Tags		users
 // @Produce		json
 // @Param		id path int true "User ID"
-// @Success		200	{object} model.ApiResponse "Successfully deleted user"
+// @Success		200	{object} model.ApiResponse "Successfully marked user as inactive"
 // @Failure		403	{object} model.ApiResponse "Insufficient permissions"
-// @Failure		500	{object} model.ApiResponse "Error deleting user"
+// @Failure		500	{object} model.ApiResponse "Error updating user status"
 // @Router		/users/{id} [delete]
 func DeleteUser(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
@@ -187,15 +181,19 @@ func DeleteUser(c *gin.Context) {
 
 	id := c.Param("id")
 
-	result := database.DB.Exec("DELETE FROM users WHERE id = $1", id)
-	if result.Error != nil {
-		log.Println("Error deleting user:", result.Error)
+	if err := database.DB.Model(&model.User{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"deleted_at": time.Now(),
+			"is_active":  false,
+		}).Error; err != nil {
+		log.Println("Error updating user to inactive:", err)
 		utils.RespondWithError(c, "Error deleting user", http.StatusInternalServerError)
 		return
 	}
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
-		Message: "Successfully deleted user",
+		Message: "Successfully marked user as inactive",
 	})
 }
