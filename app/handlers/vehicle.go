@@ -95,3 +95,44 @@ func UpdateVehicle(c *gin.Context) {
 		Message: "Successfully updated user",
 	})
 }
+
+// @Summary		Create a new vehicle
+// @Description	Creates a new vehicle entry in the database.
+// @Tags		vehicles
+// @Accept		json
+// @Produce		json
+// @Param		user body model.CreateVehicleRequest true "Vehicle information to create"
+// @Success		200	{object} model.ApiResponse "Successfully created vehile"
+// @Failure		400	{object} model.ApiResponse "Invalid request format"
+// @Failure		500	{object} model.ApiResponse "Error creating new vehicle"
+// @Router		/vehicles/ [post]
+func CreateVehicle(c *gin.Context) {
+	var req model.CreateVehicleRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Println("Error parsing request:", err)
+		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
+		return
+	}
+
+	vehicle := model.Vehicle{
+		Brand:                  req.Brand,
+		Model:                  req.Model,
+		LicensePlate:           req.LicensePlate,
+		CapacityKg:             req.CapacityKg,
+		Available:              req.Available,
+		CurrentMileage:         req.CurrentMileage,
+		NextMaintenanceMileage: req.NextMaintenanceMileage,
+	}
+
+	if err := database.DB.Create(&vehicle).Error; err != nil {
+		log.Println("Error creating new vehicle:", err)
+		utils.RespondWithError(c, "Error creating new vehicle", http.StatusInternalServerError)
+		return
+	}
+
+	utils.RespondWithJSON(c, model.ApiResponse{
+		Success: true,
+		Message: "Successfully created vehicle",
+	})
+}
