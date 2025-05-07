@@ -31,4 +31,7 @@ type Vehicle struct {
 	Available              *bool   `json:"available"` 
 	CurrentMileage         float64 `json:"currentMileage" gorm:"column:current_mileage;not null;check:current_mileage > 0"`
 	NextMaintenanceMileage float64 `json:"nextMaintenanceMileage" gorm:"column:next_maintenance_mileage;not null;check:next_maintenance_mileage > 0"`
+	LastModifiedAt time.Time `json:"lastModifiedAt" gorm:"column:last_modified_at;autoUpdateTime"`
+	DeletedAt  *time.Time `json:"deletedAt" gorm:"column:deleted_at"`
+	IsActive   bool       `json:"isActive" gorm:"column:is_active;default:true"`
 }

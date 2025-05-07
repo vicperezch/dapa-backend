@@ -39,6 +39,7 @@ func SetupRoutes(router *gin.Engine) {
 				admin.DELETE("/users/:id", handlers.DeleteUser)
 				
 				admin.GET("/vehicles/:id", handlers.GetVehicleById)
+				admin.PUT("/vehicles/:id", handlers.UpdateVehicle)
 			}
 			
 			// Rutas que solo el rol driver puede tener
