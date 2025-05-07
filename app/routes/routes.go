@@ -38,6 +38,7 @@ func SetupRoutes(router *gin.Engine) {
 				admin.GET("/users/:id", handlers.GetUserById)
 				admin.DELETE("/users/:id", handlers.DeleteUser)
 				
+				admin.GET("/vehicles", handlers.GetVehicles)
 				admin.POST("/vehicles", handlers.CreateVehicle)
 				admin.GET("/vehicles/:id", handlers.GetVehicleById)
 				admin.PUT("/vehicles/:id", handlers.UpdateVehicle)

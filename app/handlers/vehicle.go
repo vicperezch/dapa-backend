@@ -11,6 +11,33 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary		Get all vehicles
+// @Description	Returns a list of all vehicles in the system.
+// @Tags		vehicles
+// @Produce		json
+// @Success		200	{array} model.Vehicle "List of vehicles"
+// @Failure		403	{object} model.ApiResponse "Insufficient permissions"
+// @Failure		500	{object} model.ApiResponse "Error fetching vehicles"
+// @Router		/vehicles/ [get]
+func GetVehicles(c *gin.Context) {
+	claims := c.MustGet("claims").(*model.EmployeeClaims)
+	
+	if claims.Role != "admin" {
+		utils.RespondWithError(c,"Insufficient permissions",http.StatusForbidden )
+		return
+	}
+
+	var vehicles []model.Vehicle
+
+	if err := database.DB.Find(&vehicles).Error; err != nil {
+		log.Println("Error fetching vehicles:", err)
+		utils.RespondWithError(c, "Error getting all vehicles", http.StatusInternalServerError)
+		return
+	}
+
+	utils.RespondWithJSON(c, vehicles)
+}
+
 // @Summary		Get vehicle by ID
 // @Description	Returns the vehicle information based on the given ID.
 // @Tags		vehicles
@@ -46,7 +73,7 @@ func GetVehicleById(c *gin.Context) {
 // @Accept		json
 // @Produce		json
 // @Param		id path int true "Vehicle ID"
-// @Param		user body model.UpdateVehicleRequest true "Updated vehicle information"
+// @Param		vehicle body model.UpdateVehicleRequest true "Updated vehicle information"
 // @Success		200	{object} model.ApiResponse "Successfully updated vehicle"
 // @Failure		400	{object} model.ApiResponse "Invalid request format"
 // @Failure		500	{object} model.ApiResponse "Error updating vehicle"
@@ -92,7 +119,7 @@ func UpdateVehicle(c *gin.Context) {
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
-		Message: "Successfully updated user",
+		Message: "Successfully updated vehicle",
 	})
 }
 
@@ -101,7 +128,7 @@ func UpdateVehicle(c *gin.Context) {
 // @Tags		vehicles
 // @Accept		json
 // @Produce		json
-// @Param		user body model.CreateVehicleRequest true "Vehicle information to create"
+// @Param		vehicle body model.CreateVehicleRequest true "Vehicle information to create"
 // @Success		200	{object} model.ApiResponse "Successfully created vehile"
 // @Failure		400	{object} model.ApiResponse "Invalid request format"
 // @Failure		500	{object} model.ApiResponse "Error creating new vehicle"
