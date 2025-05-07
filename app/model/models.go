@@ -21,3 +21,14 @@ type Employee struct {
 	Password string `json:"password"`
 	Role     string `json:"role" gorm:"size:20;not null"`
 }
+
+type Vehicle struct {
+	ID       uint `json:"id" gorm:"primaryKey"`
+	Brand 	 string `json:"brand" gorm:"size:50;not null"`
+	Model 	 string `json:"model" gorm:"size:50;not null"`
+	LicensePlate 	 string `json:"license_plate" gorm:"size:15;not null;unique"`
+	CapacityKg             float64 `json:"capacityKg" gorm:"column:capacity_kg;check:capacity_kg > 0"`
+	Available              *bool   `json:"available"` 
+	CurrentMileage         float64 `json:"currentMileage" gorm:"column:current_mileage;not null;check:current_mileage > 0"`
+	NextMaintenanceMileage float64 `json:"nextMaintenanceMileage" gorm:"column:next_maintenance_mileage;not null;check:next_maintenance_mileage > 0"`
+}
