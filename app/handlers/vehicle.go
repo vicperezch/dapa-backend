@@ -163,3 +163,39 @@ func CreateVehicle(c *gin.Context) {
 		Message: "Successfully created vehicle",
 	})
 }
+
+// @Summary		Mark vehicle as inactive
+// @Description	Marks the vehicle as inactive instead of permanently deleting.
+// @Tags		vehicles
+// @Produce		json
+// @Param		id path int true "Vehicle ID"
+// @Success		200	{object} model.ApiResponse "Successfully marked vehicle as inactive"
+// @Failure		403	{object} model.ApiResponse "Insufficient permissions"
+// @Failure		500	{object} model.ApiResponse "Error updating vehicle status"
+// @Router		/vehicles/{id} [delete]
+func DeleteVehicle(c *gin.Context) {
+	claims := c.MustGet("claims").(*model.EmployeeClaims)
+
+	if claims.Role != "admin" {
+		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		return
+	}
+
+	id := c.Param("id")
+
+	if err := database.DB.Model(&model.Vehicle{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"deleted_at": time.Now(),
+			"is_active":  false,
+		}).Error; err != nil {
+		log.Println("Error updating vehicle to inactive:", err)
+		utils.RespondWithError(c, "Error deleting vehicle", http.StatusInternalServerError)
+		return
+	}
+
+	utils.RespondWithJSON(c, model.ApiResponse{
+		Success: true,
+		Message: "Successfully marked vehicle as inactive",
+	})
+}

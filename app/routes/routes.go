@@ -42,6 +42,7 @@ func SetupRoutes(router *gin.Engine) {
 				admin.POST("/vehicles", handlers.CreateVehicle)
 				admin.GET("/vehicles/:id", handlers.GetVehicleById)
 				admin.PUT("/vehicles/:id", handlers.UpdateVehicle)
+				admin.DELETE("/vehicles/:id", handlers.DeleteVehicle)
 			}
 			
 			// Rutas que solo el rol driver puede tener
