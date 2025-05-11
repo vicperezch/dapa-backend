@@ -22,9 +22,9 @@ import (
 // @Router		/users/ [get]
 func GetUsers(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
-	
+
 	if claims.Role != "admin" {
-		utils.RespondWithError(c,"Insufficient permissions",http.StatusForbidden )
+		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
@@ -49,12 +49,6 @@ func GetUsers(c *gin.Context) {
 // @Failure		500	{object} model.ApiResponse "Error fetching user"
 // @Router		/users/{id} [get]
 func GetUserById(c *gin.Context) {
-	claims := c.MustGet("claims").(*model.EmployeeClaims)
-
-	if claims.Role != "admin" {
-		utils.RespondWithError(c,"Insufficient permissions",http.StatusForbidden )
-		return
-	}
 
 	var user model.User
 
