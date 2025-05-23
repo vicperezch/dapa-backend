@@ -23,6 +23,11 @@ type Employee struct {
 	Role     string `json:"role" gorm:"size:20;not null"`
 }
 
+type UserWithRole struct {
+	User
+	Role string `json:"role"`
+}
+
 type Vehicle struct {
 	ID                     uint       `json:"id" gorm:"primaryKey"`
 	Brand                  string     `json:"brand" gorm:"size:50;not null"`

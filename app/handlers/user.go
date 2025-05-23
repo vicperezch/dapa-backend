@@ -50,14 +50,20 @@ func GetUsers(c *gin.Context) {
 // @Router		/users/{id} [get]
 func GetUserById(c *gin.Context) {
 
-	var user model.User
+	var user model.UserWithRole
 
 	id := c.Param("id")
-	if err := database.DB.First(&user, id).Error; err != nil {
-		log.Println("Error fetching user:", err)
-		utils.RespondWithError(c, "Error getting user", http.StatusInternalServerError)
-		return
-	}
+	if err := database.DB.
+        Table("users").
+        Select("users.*, COALESCE(employees.role, 'user') as role").
+        Joins("LEFT JOIN employees ON employees.user_id = users.id").
+        Where("users.id = ?", id).
+        First(&user).Error; err != nil {
+        
+        log.Println("Error fetching user:", err)
+        utils.RespondWithError(c, "Error getting user", http.StatusInternalServerError)
+        return
+    }
 
 	utils.RespondWithJSON(c, user)
 }
