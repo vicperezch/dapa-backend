@@ -15,16 +15,16 @@ func IsAllDigits(s string) bool {
 func GetTagMessage(tag string) string {
 	switch tag {
 	case "phone":
-		return "Phone must only contain digits"
+		return "El teléfono debe contener únicamente dígitos"
 
 	case "password":
-		return "Password must have at least 8 characters"
+		return "La contraseña debe contener al menos 8 dígitos"
 
 	case "validrole":
-		return "Must enter a valid role"
+		return "Debe ingresar un rol válido"
 
 	case "email":
-		return "Invalid email"
+		return "Correo inválido"
 	}
 
 	return ""

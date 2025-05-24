@@ -55,7 +55,7 @@ func RegisterHandler(c *gin.Context) {
 	passwordHash, err := utils.HashPassword(req.Password)
 	if err != nil {
 		log.Println("Error hashing password: ", err)
-		utils.RespondWithError(c, "Error registering user", http.StatusInternalServerError)
+		utils.RespondWithError(c, "Error hashing password", http.StatusInternalServerError)
 		return
 	}
 
@@ -69,8 +69,9 @@ func RegisterHandler(c *gin.Context) {
 		Password: passwordHash,
 		Role:     req.Role,
 	}
+
 	if err = database.DB.Create(&employee).Error; err != nil {
-		utils.RespondWithError(c, "Error registering user", http.StatusInternalServerError)
+		utils.RespondWithError(c, "Error registrando al usuario", http.StatusInternalServerError)
 		return
 	}
 

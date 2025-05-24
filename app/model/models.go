@@ -9,7 +9,7 @@ type User struct {
 	Name           string     `json:"name" gorm:"size:50;not null"`
 	LastName       string     `json:"lastName" gorm:"column:last_name;size:50;not null"`
 	Phone          string     `json:"phone" gorm:"size:20;not null"`
-	Email          string     `json:"email" gorm:"default:unknown"`
+	Email          string     `json:"email" gorm:"default:unknown;unique"`
 	LastModifiedAt time.Time  `json:"lastModifiedAt" gorm:"column:last_modified_at;autoUpdateTime"`
 	DeletedAt      *time.Time `json:"deletedAt" gorm:"column:deleted_at"`
 	IsActive       bool       `json:"isActive" gorm:"column:is_active;default:true"`
