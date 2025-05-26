@@ -21,15 +21,15 @@ import (
 // @Router		/vehicles/ [get]
 func GetVehicles(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
-	
+
 	if claims.Role != "admin" {
-		utils.RespondWithError(c,"Insufficient permissions",http.StatusForbidden )
+		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
 	var vehicles []model.Vehicle
 
-	if err := database.DB.Find(&vehicles).Error; err != nil {
+	if err := database.DB.Where("is_active = ?", true).Find(&vehicles).Error; err != nil {
 		log.Println("Error fetching vehicles:", err)
 		utils.RespondWithError(c, "Error getting all vehicles", http.StatusInternalServerError)
 		return
@@ -51,14 +51,14 @@ func GetVehicleById(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 
 	if claims.Role != "admin" {
-		utils.RespondWithError(c,"Insufficient permissions",http.StatusForbidden )
+		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
 	var vehicle model.Vehicle
 
 	id := c.Param("id")
-	if err := database.DB.First(&vehicle, id).Error; err != nil {
+	if err := database.DB.Where("is_active = ?", true).First(&vehicle, id).Error; err != nil {
 		log.Println("Error fetching vehicle:", err)
 		utils.RespondWithError(c, "Error getting vehicle", http.StatusInternalServerError)
 		return
@@ -82,7 +82,7 @@ func UpdateVehicle(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 
 	if claims.Role != "admin" {
-		utils.RespondWithError(c,"Insufficient permissions",http.StatusForbidden )
+		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
@@ -96,7 +96,7 @@ func UpdateVehicle(c *gin.Context) {
 	id := c.Param("id")
 
 	var vehicle model.Vehicle
-	if err := database.DB.First(&vehicle, id).Error; err != nil {
+	if err := database.DB.Where("is_active = ?", true).First(&vehicle, id).Error; err != nil {
 		log.Println("Error finding vehicle:", err)
 		utils.RespondWithError(c, "Vehicle not found", http.StatusInternalServerError)
 		return

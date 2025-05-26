@@ -30,7 +30,7 @@ func GetUsers(c *gin.Context) {
 
 	var users []model.User
 
-	if err := database.DB.Find(&users).Error; err != nil {
+	if err := database.DB.Where("is_active = ?", true).Find(&users).Error; err != nil {
 		log.Println("Error fetching users:", err)
 		utils.RespondWithError(c, "Error getting all users", http.StatusInternalServerError)
 		return
@@ -57,7 +57,7 @@ func GetUserById(c *gin.Context) {
 		Table("users").
 		Select("users.*, COALESCE(employees.role, 'user') as role").
 		Joins("LEFT JOIN employees ON employees.user_id = users.id").
-		Where("users.id = ?", id).
+		Where("users.id = ? AND users.is_active = ?", id, true).
 		First(&user).Error; err != nil {
 
 		log.Println("Error fetching user:", err)
@@ -130,7 +130,7 @@ func UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 
 	var user model.User
-	if err := database.DB.First(&user, id).Error; err != nil {
+	if err := database.DB.Where("is_active = ?", true).First(&user, id).Error; err != nil {
 		log.Println("Error finding user:", err)
 		utils.RespondWithError(c, "User not found", http.StatusInternalServerError)
 		return

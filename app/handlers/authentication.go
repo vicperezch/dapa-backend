@@ -104,7 +104,7 @@ func LoginHandler(c *gin.Context) {
 
 	err := database.DB.Preload("User").
 		Joins("JOIN users ON users.id = employees.user_id").
-		Where("users.email = ?", req.Email).
+		Where("users.email = ? AND users.is_active = ?", req.Email, true).
 		First(&employee).Error
 
 	if err != nil {
