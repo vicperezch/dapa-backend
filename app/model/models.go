@@ -16,11 +16,12 @@ type User struct {
 }
 
 type Employee struct {
-	ID       uint `json:"id" gorm:"primaryKey"`
-	UserID   uint
-	User     User   `gorm:"constraint:OnDelete:CASCADE"`
-	Password string `json:"password"`
-	Role     string `json:"role" gorm:"size:20;not null"`
+	ID                uint `json:"id" gorm:"primaryKey"`
+	UserID            uint
+	User              User      `gorm:"constraint:OnDelete:CASCADE"`
+	LicenseExpiration time.Time `json:"licenseExpirationDate" gorm:"column:license_expiration_date"`
+	Password          string    `json:"password"`
+	Role              string    `json:"role" gorm:"size:20;not null"`
 }
 
 type UserWithRole struct {

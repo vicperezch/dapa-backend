@@ -24,15 +24,15 @@ import (
 // @Router		/users/ [post]
 func RegisterHandler(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
-	
+
 	if claims.Role != "admin" {
-		utils.RespondWithError(c,"Insufficient permissions",http.StatusForbidden )
+		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
 	var req model.RegisterRequest
 	var err error
-	
+
 	if err = c.ShouldBindJSON(&req); err != nil {
 		log.Println("Error parsing request: ", err)
 
@@ -66,8 +66,9 @@ func RegisterHandler(c *gin.Context) {
 			Phone:    req.Phone,
 			Email:    req.Email,
 		},
-		Password: passwordHash,
-		Role:     req.Role,
+		LicenseExpiration: req.LicenseExpiration,
+		Password:          passwordHash,
+		Role:              req.Role,
 	}
 
 	if err = database.DB.Create(&employee).Error; err != nil {
@@ -119,13 +120,13 @@ func LoginHandler(c *gin.Context) {
 
 	token, err := utils.GenerateToken(&employee)
 	if err != nil {
-		utils.RespondWithError(c,"Failed to generate token", http.StatusInternalServerError)
+		utils.RespondWithError(c, "Failed to generate token", http.StatusInternalServerError)
 		return
 	}
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
 		Message: "Login successful",
-		Data: token,
+		Data:    token,
 	})
 }

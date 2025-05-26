@@ -1,12 +1,15 @@
 package model
 
+import "time"
+
 type RegisterRequest struct {
-	Name     string `json:"name" binding:"required"`
-	LastName string `json:"lastName" binding:"required"`
-	Phone    string `json:"phone" binding:"required,phone"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,password"`
-	Role     string `json:"role" binding:"required,validrole"`
+	Name              string    `json:"name" binding:"required"`
+	LastName          string    `json:"lastName" binding:"required"`
+	Phone             string    `json:"phone" binding:"required,phone"`
+	Email             string    `json:"email" binding:"required,email"`
+	LicenseExpiration time.Time `json:"licenseExpirationDate"`
+	Password          string    `json:"password" binding:"required,password"`
+	Role              string    `json:"role" binding:"required,validrole"`
 }
 
 type CreateUserRequest struct {
@@ -29,7 +32,7 @@ type CreateVehicleRequest struct {
 	Model                  string  `json:"model" binding:"required"`
 	LicensePlate           string  `json:"licensePlate" binding:"required"`
 	CapacityKg             float64 `json:"capacityKg" binding:"required,gt=0"`
-	Available              *bool   `json:"available" binding:"required"` 
+	Available              *bool   `json:"available" binding:"required"`
 	CurrentMileage         float64 `json:"currentMileage" binding:"required,gt=0"`
 	NextMaintenanceMileage float64 `json:"nextMaintenanceMileage" binding:"required,gt=0"`
 }
@@ -37,9 +40,9 @@ type CreateVehicleRequest struct {
 type UpdateVehicleRequest struct {
 	Brand                  string  `json:"brand" binding:"required"`
 	Model                  string  `json:"model" binding:"required"`
-	LicensePlate           string  `json:"licensePlate" binding:"required"` 
+	LicensePlate           string  `json:"licensePlate" binding:"required"`
 	CapacityKg             float64 `json:"capacityKg" binding:"required,gt=0"`
-	Available              *bool   `json:"available" binding:"required"` 
+	Available              *bool   `json:"available" binding:"required"`
 	CurrentMileage         float64 `json:"currentMileage" binding:"required,gt=0"`
 	NextMaintenanceMileage float64 `json:"nextMaintenanceMileage" binding:"required,gt=0"`
 }
