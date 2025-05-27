@@ -9,6 +9,7 @@ type User struct {
 	Name           string     `json:"name" gorm:"size:50;not null"`
 	LastName       string     `json:"lastName" gorm:"column:last_name;size:50;not null"`
 	Phone          string     `json:"phone" gorm:"size:20;not null"`
+	CreatedAt	   time.Time  `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
 	Email          string     `json:"email" gorm:"default:unknown;unique"`
 	LastModifiedAt time.Time  `json:"lastModifiedAt" gorm:"column:last_modified_at;autoUpdateTime"`
 	DeletedAt      *time.Time `json:"deletedAt" gorm:"column:deleted_at"`
@@ -38,6 +39,7 @@ type Vehicle struct {
 	Available              *bool      `json:"available"`
 	CurrentMileage         float64    `json:"currentMileage" gorm:"column:current_mileage;not null;check:current_mileage > 0"`
 	NextMaintenanceMileage float64    `json:"nextMaintenanceMileage" gorm:"column:next_maintenance_mileage;not null;check:next_maintenance_mileage > 0"`
+	CreatedAt 			   time.Time  `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
 	LastModifiedAt         time.Time  `json:"lastModifiedAt" gorm:"column:last_modified_at;autoUpdateTime"`
 	DeletedAt              *time.Time `json:"deletedAt" gorm:"column:deleted_at"`
 	IsActive               bool       `json:"isActive" gorm:"column:is_active;default:true"`

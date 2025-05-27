@@ -21,17 +21,19 @@ import (
 // @Router		/vehicles/ [get]
 func GetVehicles(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
-
 	if claims.Role != "admin" {
 		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
 	var vehicles []model.Vehicle
+	err := database.DB.
+		Where("is_active = ?", true).
+		Find(&vehicles).Error
 
-	if err := database.DB.Where("is_active = ?", true).Find(&vehicles).Error; err != nil {
+	if err != nil {
 		log.Println("Error fetching vehicles:", err)
-		utils.RespondWithError(c, "Error getting all vehicles", http.StatusInternalServerError)
+		utils.RespondWithError(c, "Error retrieving vehicles", http.StatusInternalServerError)
 		return
 	}
 
@@ -49,18 +51,21 @@ func GetVehicles(c *gin.Context) {
 // @Router		/vehicles/{id} [get]
 func GetVehicleById(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
-
 	if claims.Role != "admin" {
 		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
+	id := c.Param("id")
 	var vehicle model.Vehicle
 
-	id := c.Param("id")
-	if err := database.DB.Where("is_active = ?", true).First(&vehicle, id).Error; err != nil {
+	err := database.DB.
+		Where("id = ? AND is_active = ?", id, true).
+		First(&vehicle).Error
+
+	if err != nil {
 		log.Println("Error fetching vehicle:", err)
-		utils.RespondWithError(c, "Error getting vehicle", http.StatusInternalServerError)
+		utils.RespondWithError(c, "Vehicle not found", http.StatusNotFound)
 		return
 	}
 
@@ -80,7 +85,6 @@ func GetVehicleById(c *gin.Context) {
 // @Router		/vehicles/{id} [put]
 func UpdateVehicle(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
-
 	if claims.Role != "admin" {
 		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
 		return
@@ -94,24 +98,28 @@ func UpdateVehicle(c *gin.Context) {
 	}
 
 	id := c.Param("id")
-
 	var vehicle model.Vehicle
-	if err := database.DB.Where("is_active = ?", true).First(&vehicle, id).Error; err != nil {
+	if err := database.DB.Where("id = ? AND is_active = ?", id, true).First(&vehicle).Error; err != nil {
 		log.Println("Error finding vehicle:", err)
-		utils.RespondWithError(c, "Vehicle not found", http.StatusInternalServerError)
+		utils.RespondWithError(c, "Vehicle not found", http.StatusNotFound)
 		return
 	}
 
-	vehicle.Brand = req.Brand
-	vehicle.Model = req.Model
-	vehicle.LicensePlate = req.LicensePlate
-	vehicle.CapacityKg = req.CapacityKg
-	vehicle.Available = req.Available
-	vehicle.CurrentMileage = req.CurrentMileage
-	vehicle.NextMaintenanceMileage = req.NextMaintenanceMileage
-	vehicle.LastModifiedAt = time.Now()
+	updated := model.Vehicle{
+		ID:                     vehicle.ID,
+		Brand:                  req.Brand,
+		Model:                  req.Model,
+		LicensePlate:           req.LicensePlate,
+		CapacityKg:             req.CapacityKg,
+		Available:              req.Available,
+		CurrentMileage:         req.CurrentMileage,
+		NextMaintenanceMileage: req.NextMaintenanceMileage,
+		IsActive:               true,
+		CreatedAt:              vehicle.CreatedAt,
+		LastModifiedAt:         time.Now(),
+	}
 
-	if err := database.DB.Save(&vehicle).Error; err != nil {
+	if err := database.DB.Save(&updated).Error; err != nil {
 		log.Println("Error updating vehicle:", err)
 		utils.RespondWithError(c, "Error updating vehicle", http.StatusInternalServerError)
 		return
@@ -119,7 +127,7 @@ func UpdateVehicle(c *gin.Context) {
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
-		Message: "Successfully updated vehicle",
+		Message: "Vehicle updated successfully",
 	})
 }
 
@@ -135,7 +143,6 @@ func UpdateVehicle(c *gin.Context) {
 // @Router		/vehicles/ [post]
 func CreateVehicle(c *gin.Context) {
 	var req model.CreateVehicleRequest
-
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Println("Error parsing request:", err)
 		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
@@ -152,15 +159,16 @@ func CreateVehicle(c *gin.Context) {
 		NextMaintenanceMileage: req.NextMaintenanceMileage,
 	}
 
-	if err := database.DB.Create(&vehicle).Error; err != nil {
+	err := database.DB.Create(&vehicle).Error
+	if err != nil {
 		log.Println("Error creating new vehicle:", err)
-		utils.RespondWithError(c, "Error creating new vehicle", http.StatusInternalServerError)
+		utils.RespondWithError(c, "Error creating vehicle", http.StatusInternalServerError)
 		return
 	}
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
-		Message: "Successfully created vehicle",
+		Message: "Vehicle created successfully",
 	})
 }
 
@@ -175,7 +183,6 @@ func CreateVehicle(c *gin.Context) {
 // @Router		/vehicles/{id} [delete]
 func DeleteVehicle(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
-
 	if claims.Role != "admin" {
 		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
 		return
@@ -183,19 +190,21 @@ func DeleteVehicle(c *gin.Context) {
 
 	id := c.Param("id")
 
-	if err := database.DB.Model(&model.Vehicle{}).
+	err := database.DB.Model(&model.Vehicle{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"deleted_at": time.Now(),
 			"is_active":  false,
-		}).Error; err != nil {
-		log.Println("Error updating vehicle to inactive:", err)
+		}).Error
+
+	if err != nil {
+		log.Println("Error marking vehicle as inactive:", err)
 		utils.RespondWithError(c, "Error deleting vehicle", http.StatusInternalServerError)
 		return
 	}
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
-		Message: "Successfully marked vehicle as inactive",
+		Message: "Vehicle successfully marked as inactive",
 	})
 }
