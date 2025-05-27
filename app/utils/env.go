@@ -9,50 +9,54 @@ import (
 )
 
 var (
-	once     sync.Once
+	once      sync.Once
 	envLoaded bool
 )
 
-// Carga el archivo .env una sola vez
+// Load reads the .env file once and loads environment variables into the process.
+// It uses sync.Once to ensure the file is loaded only a single time during the app lifecycle.
 func Load() {
 	once.Do(func() {
 		if err := godotenv.Load(".env"); err != nil {
-			log.Printf("No se pudo cargar el archivo .env: %v", err)
+			log.Printf("Failed to load .env file: %v", err)
 		}
 		envLoaded = true
 	})
 }
 
-// Obtiene una variable de entorno o devuelve un valor por defecto 
+// EnvGet retrieves the value of the environment variable named by the key.
+// If the variable is not set, it returns the provided defaultValue.
+// If no defaultValue is provided and the variable is not set, it logs a warning and returns an empty string.
+// It ensures the .env file is loaded before accessing environment variables.
 func EnvGet(key, defaultValue string) string {
-	//Si el archivo .env no esta cargado lo carga
 	if !envLoaded {
 		Load()
 	}
-	
+
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
-	
+
 	if defaultValue != "" {
 		return defaultValue
 	}
-	
-	log.Printf("Variable de entorno %s no definida y sin valor por defecto", key)
+
+	log.Printf("Environment variable %s not set and no default value provided", key)
 	return ""
 }
 
-// Obtiene una variable de entorno o panic si no está definida
+// EnvMustGet retrieves the value of the environment variable named by the key.
+// If the variable is not set, it logs a panic and stops execution.
+// It ensures the .env file is loaded before accessing environment variables.
 func EnvMustGet(key string) string {
-	//Si el archivo .env no esta cargado lo carga
 	if !envLoaded {
 		Load()
 	}
-	
+
 	value, exists := os.LookupEnv(key)
 	if !exists {
-		log.Panicf("Variable de entorno requerida %s no está definida", key)
+		log.Panicf("Required environment variable %s is not defined", key)
 	}
-	
+
 	return value
 }

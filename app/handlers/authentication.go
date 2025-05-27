@@ -12,16 +12,17 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// @Summary		Register a new employee.
-// @Description	Creates a new employee entry in the database.
-// @Tags		users
-// @Accept		json
-// @Produce		json
-// @Param		register body model.RegisterRequest true "Required information to register user."
-// @Success		200	{object} model.ApiResponse "Employee registered successfully."
-// @Failure		400	{object} model.ApiResponse "Request did not pass the validations."
-// @Failure		500	{object} model.ApiResponse "Error when trying to register user."
-// @Router		/users/ [post]
+// @Summary      Register a new employee
+// @Description  Creates a new employee entry. Only admins are allowed to register employees.
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        register body model.RegisterRequest true "Employee registration data"
+// @Success      200 {object} model.ApiResponse "Employee registered successfully"
+// @Failure      400 {object} model.ApiResponse "Invalid input data"
+// @Failure      403 {object} model.ApiResponse "Insufficient permissions"
+// @Failure      500 {object} model.ApiResponse "Internal server error"
+// @Router       /users/ [post]
 func RegisterHandler(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 
@@ -82,16 +83,17 @@ func RegisterHandler(c *gin.Context) {
 	})
 }
 
-// @Summary		Login for employees.
-// @Description	Authenticates an employee and returns a JWT token.
-// @Tags		auth
-// @Accept		json
-// @Produce		json
-// @Param		login body model.LoginRequest true "Credentials for login"
-// @Success		200	{object} model.ApiResponse "Login successful"
-// @Failure		400	{object} model.ApiResponse "Invalid request format"
-// @Failure		401	{object} model.ApiResponse "Invalid email or password"
-// @Router		/login/ [post]
+// @Summary      Employee login
+// @Description  Authenticates an employee and returns a JWT token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        login body model.LoginRequest true "Employee login credentials"
+// @Success      200 {object} model.ApiResponse "Login successful, token returned in data"
+// @Failure      400 {object} model.ApiResponse "Invalid request format"
+// @Failure      401 {object} model.ApiResponse "Invalid email or password"
+// @Failure      500 {object} model.ApiResponse "Internal server error"
+// @Router       /login/ [post]
 func LoginHandler(c *gin.Context) {
 	var req model.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
