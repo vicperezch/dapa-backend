@@ -82,7 +82,6 @@ func CreateUser(c *gin.Context) {
 	var req model.CreateUserRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Println("Error parsing request:", err)
 		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
 		return
 	}
@@ -208,3 +207,4 @@ func DeleteUser(c *gin.Context) {
 		Message: "User successfully marked as inactive",
 	})
 }
+

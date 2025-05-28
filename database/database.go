@@ -52,3 +52,4 @@ func migrateDatabase() {
 		log.Fatal("Failed to migrate DB:", err)
 	}
 }
+

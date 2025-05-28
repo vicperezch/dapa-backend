@@ -1,6 +1,13 @@
 package utils
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"time"
+
+	"github.com/dchest/passwordreset"
+	"golang.org/x/crypto/bcrypt"
+)
+
+var resetSecret = []byte(EnvMustGet("RESET_SECRET"))
 
 // HashPassword hashes a plain text password using bcrypt algorithm.
 // Returns the hashed password as a string or an error if hashing fails.
@@ -15,3 +22,24 @@ func CheckPassword(password string, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
+
+// Generates a new token to reset a users password
+// Returns the generated token
+func GenerateResetToken(email string, passwordHash string) string {
+	token := passwordreset.NewToken(email, time.Hour, []byte(passwordHash), resetSecret)
+
+	return token
+}
+
+// Checks if a token to reset a users password is valid
+// Returns the user that requested the reset
+func VerifyResetToken(token string, getPasswordHash func(string) ([]byte, error)) (string, error) {
+	login, err := passwordreset.VerifyToken(token, getPasswordHash, resetSecret)
+
+	if err != nil {
+		return "", err
+	}
+
+	return login, nil
+}
+

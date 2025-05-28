@@ -132,3 +132,57 @@ func LoginHandler(c *gin.Context) {
 		Data:    token,
 	})
 }
+
+func ResetLinkHandler(c *gin.Context) {
+	var req model.PasswordResetRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondWithError(c, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// token := utils.GenerateResetToken(req.Email, getPasswordHash(req.Email))
+	// TODO: send token via email
+}
+
+func PasswordResetHandler(c *gin.Context) {
+	var req model.NewPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondWithError(c, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	login, err := utils.VerifyResetToken(req.Token, getPasswordHash)
+	if err != nil {
+		utils.RespondWithError(c, "Token verification failed", http.StatusUnauthorized)
+		return
+	}
+
+	paswordHash, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		utils.RespondWithError(c, "Error hashing password", http.StatusInternalServerError)
+		return
+	}
+
+	var employee model.Employee
+	database.DB.Where("is_active = ? and email = ?", true, login).Scan(&employee)
+
+	employee.Password = paswordHash
+	database.DB.Save(&employee)
+
+	utils.RespondWithJSON(c, model.ApiResponse{
+		Success: true,
+		Message: "Password updated succesfully",
+	})
+}
+
+func getPasswordHash(email string) ([]byte, error) {
+	var hash []byte
+	database.DB.
+		Table("employees").
+		Select("employees.password").
+		Joins("left join users on users.id = employees.user_id").
+		Where("is_active = ? and users.email = ?", true, email).
+		Scan(&hash)
+
+	return hash, nil
+}

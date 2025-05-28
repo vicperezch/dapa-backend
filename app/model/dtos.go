@@ -12,6 +12,15 @@ type RegisterRequest struct {
 	Role              string    `json:"role" binding:"required,validrole"`
 }
 
+type PasswordResetRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+type NewPasswordRequest struct {
+	Token       string `json:"token" binding:"required"`
+	NewPassword string `json:"newPassword" binding:"required,password"`
+}
+
 type CreateUserRequest struct {
 	Name     string `json:"name" binding:"required"`
 	LastName string `json:"lastName" binding:"required"`
