@@ -1,0 +1,5 @@
+[build]
+cmd = "go build -o /tmp/app -buildvcs=false ./cmd && chmod +x /tmp/app"
+bin = "/tmp/app"
+include_ext = ["go", "tpl", "tmpl"]
+exclude_dir = ["vendor", "tmp"]

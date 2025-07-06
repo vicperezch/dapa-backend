@@ -8,6 +8,9 @@
 *.so
 *.dylib
 
+# Air
+tmp/
+
 # Test binary, built with `go test -c`
 *.test
 
