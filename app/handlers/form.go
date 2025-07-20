@@ -1,0 +1,206 @@
+package handlers
+
+import (
+    "dapa/app/model"
+    "dapa/app/utils"
+    "dapa/database"
+    "net/http"
+    "time"
+
+    "github.com/gin-gonic/gin"
+)
+
+// ---------- TIPOS DE PREGUNTA ----------
+
+// Crear tipo de pregunta
+func CreateQuestionType(c *gin.Context) {
+    var req model.CreateQuestionTypeRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
+        return
+    }
+    qt := model.QuestionType{Type: req.Type}
+    if err := database.DB.Create(&qt).Error; err != nil {
+        utils.RespondWithError(c, "Error al crear tipo", http.StatusInternalServerError)
+        return
+    }
+    utils.RespondWithJSON(c, model.ApiResponse{Success: true, Data: qt})
+}
+
+// Listar tipos de pregunta
+func GetQuestionTypes(c *gin.Context) {
+    var types []model.QuestionType
+    if err := database.DB.Find(&types).Error; err != nil {
+        utils.RespondWithError(c, "Error al obtener tipos", http.StatusInternalServerError)
+        return
+    }
+    utils.RespondWithJSON(c, types)
+}
+
+// ---------- PREGUNTAS ----------
+
+// Crear pregunta
+func CreateQuestion(c *gin.Context) {
+    var req model.CreateQuestionRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
+        return
+    }
+    q := model.Question{
+        Question:    req.Question,
+        Description: req.Description,
+        TypeID:      req.TypeID,
+        IsActive:    req.IsActive == nil || *req.IsActive,
+    }
+    if err := database.DB.Create(&q).Error; err != nil {
+        utils.RespondWithError(c, "Error al crear pregunta", http.StatusInternalServerError)
+        return
+    }
+    // Crear opciones si existen
+    for _, opt := range req.Options {
+        option := model.QuestionOption{QuestionID: q.ID, Option: opt.Option}
+        database.DB.Create(&option)
+    }
+    utils.RespondWithJSON(c, model.ApiResponse{Success: true, Data: q})
+}
+
+// Listar preguntas
+func GetQuestions(c *gin.Context) {
+    var questions []model.Question
+    if err := database.DB.Preload("Options").Preload("Type").Find(&questions).Error; err != nil {
+        utils.RespondWithError(c, "Error al obtener preguntas", http.StatusInternalServerError)
+        return
+    }
+    utils.RespondWithJSON(c, questions)
+}
+
+// Obtener pregunta por ID
+func GetQuestionByID(c *gin.Context) {
+    id := c.Param("id")
+    var question model.Question
+    if err := database.DB.Preload("Options").Preload("Type").First(&question, id).Error; err != nil {
+        utils.RespondWithError(c, "Pregunta no encontrada", http.StatusNotFound)
+        return
+    }
+    utils.RespondWithJSON(c, question)
+}
+
+// Actualizar pregunta
+func UpdateQuestion(c *gin.Context) {
+    id := c.Param("id")
+    var req model.UpdateQuestionRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
+        return
+    }
+    var question model.Question
+    if err := database.DB.First(&question, id).Error; err != nil {
+        utils.RespondWithError(c, "Pregunta no encontrada", http.StatusNotFound)
+        return
+    }
+    if req.Question != nil {
+        question.Question = *req.Question
+    }
+    if req.Description != nil {
+        question.Description = req.Description
+    }
+    if req.TypeID != nil {
+        question.TypeID = *req.TypeID
+    }
+    if req.IsActive != nil {
+        question.IsActive = *req.IsActive
+    }
+    question.LastModifiedAt = time.Now()
+    if err := database.DB.Save(&question).Error; err != nil {
+        utils.RespondWithError(c, "Error al actualizar pregunta", http.StatusInternalServerError)
+        return
+    }
+    // Opciones: puedes actualizar aquí si lo necesitas
+    utils.RespondWithJSON(c, model.ApiResponse{Success: true, Data: question})
+}
+
+// Eliminar pregunta (soft delete)
+func DeleteQuestion(c *gin.Context) {
+    id := c.Param("id")
+    if err := database.DB.Model(&model.Question{}).
+        Where("id = ?", id).
+        Updates(map[string]interface{}{
+            "deleted_at": time.Now(),
+            "is_active":  false,
+        }).Error; err != nil {
+        utils.RespondWithError(c, "Error al eliminar pregunta", http.StatusInternalServerError)
+        return
+    }
+    utils.RespondWithJSON(c, model.ApiResponse{Success: true, Message: "Pregunta eliminada"})
+}
+
+// ---------- OPCIONES DE PREGUNTA ----------
+
+// Crear opción
+func CreateQuestionOption(c *gin.Context) {
+    var req model.QuestionOptionRequest
+    questionID := c.Param("questionId")
+    option := model.QuestionOption{QuestionID: utils.ParseUint(questionID), Option: req.Option}
+    if err := database.DB.Create(&option).Error; err != nil {
+        utils.RespondWithError(c, "Error al crear opción", http.StatusInternalServerError)
+        return
+    }
+    utils.RespondWithJSON(c, model.ApiResponse{Success: true, Data: option})
+}
+
+// ---------- ENVÍOS DE FORMULARIO ----------
+
+// Crear envío
+func CreateSubmission(c *gin.Context) {
+    var req model.CreateSubmissionRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
+        return
+    }
+    sub := model.Submission{
+        UserID:      req.UserID,
+        SubmittedAt: time.Now(),
+        Status:      model.FormStatusPending,
+    }
+    if err := database.DB.Create(&sub).Error; err != nil {
+        utils.RespondWithError(c, "Error al crear envío", http.StatusInternalServerError)
+        return
+    }
+    // Guardar respuestas
+    for _, ans := range req.Answers {
+        answer := model.Answer{
+            SubmissionID: sub.ID,
+            QuestionID:   ans.QuestionID,
+            Answer:       ans.Answer,
+            OptionID:     ans.OptionID,
+        }
+        database.DB.Create(&answer)
+    }
+    utils.RespondWithJSON(c, model.ApiResponse{Success: true, Data: sub})
+}
+
+// Listar envíos
+func GetSubmissions(c *gin.Context) {
+    var submissions []model.Submission
+    if err := database.DB.Preload("Answers").Preload("User").Find(&submissions).Error; err != nil {
+        utils.RespondWithError(c, "Error al obtener envíos", http.StatusInternalServerError)
+        return
+    }
+    utils.RespondWithJSON(c, submissions)
+}
+
+// Actualizar estado de envío
+func UpdateSubmissionStatus(c *gin.Context) {
+    id := c.Param("id")
+    var req model.UpdateSubmissionStatusRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
+        return
+    }
+    if err := database.DB.Model(&model.Submission{}).Where("id = ?", id).
+        Update("status", req.Status).Error; err != nil {
+        utils.RespondWithError(c, "Error al actualizar estado", http.StatusInternalServerError)
+        return
+    }
+    utils.RespondWithJSON(c, model.ApiResponse{Success: true, Message: "Estado actualizado"})
+}
