@@ -4,6 +4,14 @@ import (
 	"time"
 )
 
+type FormStatus string
+
+const (
+	FormStatusPending   FormStatus = "pending"
+	FormStatusCancelled FormStatus = "cancelled"
+	FormStatusApproved  FormStatus = "approved"
+)
+
 type User struct {
 	ID             uint       `json:"id" gorm:"primaryKey"`
 	Name           string     `json:"name" gorm:"size:50;not null"`
@@ -36,3 +44,50 @@ type Vehicle struct {
 	DeletedAt              *time.Time `json:"deletedAt" gorm:"column:deleted_at"`
 	IsActive               bool       `json:"isActive" gorm:"column:is_active;default:true"`
 }
+
+// ******************** FORMULARIO ********************
+// Tipos de preguntas disponibles
+type QuestionType struct {
+	ID   uint   `json:"id" gorm:"primaryKey"`
+	Type string `json:"type" gorm:"size:50;not null"`
+}
+
+// Pregunta del formulario
+type Question struct {
+	ID          uint           `json:"id" gorm:"primaryKey"`
+	Question    string         `json:"question" gorm:"size:50;not null"`
+	Description *string        `json:"description,omitempty" gorm:"size:255"`
+	TypeID      uint           `json:"typeId" gorm:"not null"`
+	IsActive    bool           `json:"isActive" gorm:"not null;default:true"`
+	Type        QuestionType   `json:"type" gorm:"foreignKey:TypeID"`
+	Options     []QuestionOption `json:"options,omitempty" gorm:"foreignKey:QuestionID"`
+}
+
+// Opciones de una pregunta
+type QuestionOption struct {
+	ID         uint   `json:"id" gorm:"primaryKey"`
+	QuestionID uint   `json:"questionId" gorm:"not null"`
+	Option     string `json:"option" gorm:"size:50;not null"`
+}
+
+// Envío de formulario
+type Submission struct {
+	ID          uint       `json:"id" gorm:"primaryKey"`
+	UserID      uint       `json:"userId" gorm:"not null"`
+	SubmittedAt time.Time  `json:"submittedAt" gorm:"default:CURRENT_TIMESTAMP"`
+	Status      FormStatus `json:"status" gorm:"type:form_status;not null;default:'pending'"`
+	User        User       `json:"user" gorm:"foreignKey:UserID"`
+	Answers     []Answer   `json:"answers,omitempty" gorm:"foreignKey:SubmissionID"`
+}
+
+// Respuesta a una pregunta
+type Answer struct {
+	ID           uint            `json:"id" gorm:"primaryKey"`
+	SubmissionID uint            `json:"submissionId" gorm:"not null"`
+	QuestionID   *uint           `json:"questionId,omitempty"`
+	Answer       *string         `json:"answer,omitempty"`
+	OptionID     *uint           `json:"optionId,omitempty"`
+	Question     *Question       `json:"question,omitempty" gorm:"foreignKey:QuestionID"`
+	Option       *QuestionOption `json:"option,omitempty" gorm:"foreignKey:OptionID"`
+}
+
