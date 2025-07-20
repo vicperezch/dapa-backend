@@ -48,6 +48,9 @@ func SetupRoutes(router *gin.Engine) {
 		admin.GET("/vehicles/:id", handlers.GetVehicleById)
 		admin.PUT("/vehicles/:id", handlers.UpdateVehicle)
 		admin.DELETE("/vehicles/:id", handlers.DeleteVehicle)
+
+		admin.GET("/quotes", handlers.GetQuotes)
+		admin.POST("/quotes/:id", handlers.AssignQuoteInfo)
 	}
 
 	// Driver-only routes group (currently empty, placeholder for future driver endpoints)
@@ -57,3 +60,4 @@ func SetupRoutes(router *gin.Engine) {
 		// Add driver-specific routes here
 	}
 }
+

@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"dapa/app/utils"
-	"dapa/app/routes"
-	"dapa/database"
 	"dapa/app/model"
+	"dapa/app/routes"
+	"dapa/app/utils"
+	"dapa/database"
 	_ "dapa/docs"
 
 	"github.com/gin-contrib/cors"

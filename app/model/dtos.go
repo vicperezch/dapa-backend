@@ -56,6 +56,12 @@ type UpdateVehicleRequest struct {
 	NextMaintenanceMileage float64 `json:"nextMaintenanceMileage" binding:"required,gt=0"`
 }
 
+type AssignQuote struct {
+	Driver  uint   `json:"driverId" binding:"required"`
+	Vehicle uint   `json:"vehicleId" binding:"required"`
+	Details string `json:"details"`
+}
+
 type ApiResponse struct {
 	Success bool   `json:"success,omitempty"`
 	Message string `json:"message,omitempty"`
