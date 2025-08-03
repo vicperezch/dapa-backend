@@ -30,7 +30,7 @@ func GetUsers(c *gin.Context) {
 
 	var users []model.User
 
-	if err := database.DB.Find(&users).Error; err != nil {
+	if err := database.DB.Where("is_active = ?", true).Find(&users).Error; err != nil {
 		log.Println("Error fetching users:", err)
 		utils.RespondWithError(c, "Error getting all users", http.StatusInternalServerError)
 		return
@@ -50,10 +50,16 @@ func GetUsers(c *gin.Context) {
 // @Router		/users/{id} [get]
 func GetUserById(c *gin.Context) {
 
-	var user model.User
+	var user model.UserWithRole
 
 	id := c.Param("id")
-	if err := database.DB.First(&user, id).Error; err != nil {
+	if err := database.DB.
+		Table("users").
+		Select("users.*, COALESCE(employees.role, 'user') as role").
+		Joins("LEFT JOIN employees ON employees.user_id = users.id").
+		Where("users.id = ? AND users.is_active = ?", id, true).
+		First(&user).Error; err != nil {
+
 		log.Println("Error fetching user:", err)
 		utils.RespondWithError(c, "Error getting user", http.StatusInternalServerError)
 		return
@@ -76,7 +82,6 @@ func CreateUser(c *gin.Context) {
 	var req model.CreateUserRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Println("Error parsing request:", err)
 		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
 		return
 	}
@@ -96,23 +101,29 @@ func CreateUser(c *gin.Context) {
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
-		Message: "Successfully created user",
+		Message: "User created successfully",
 	})
 }
 
 // @Summary		Update user by ID
-// @Description	Updates the user information and role based on the given ID.
-// @Tags		users
-// @Accept		json
-// @Produce		json
-// @Param		id path int true "User ID"
-// @Param		user body model.UpdateUserRequest true "Updated user information"
-// @Success		200	{object} model.ApiResponse "Successfully updated user"
-// @Failure		400	{object} model.ApiResponse "Invalid request format"
-// @Failure		500	{object} model.ApiResponse "Error updating user"
-// @Router		/users/{id} [put]
+// @Description	Updates a user's data. Only accessible by admin employees.
+// @Tags			users
+// @Accept			json
+// @Produce			json
+// @Param			id path int true "User ID"
+// @Param			user body model.UpdateUserRequest true "Updated user information"
+// @Success			200 {object} model.ApiResponse "User updated successfully"
+// @Failure			400 {object} model.ApiResponse "Invalid request format"
+// @Failure			403 {object} model.ApiResponse "Insufficient permissions"
+// @Failure			404 {object} model.ApiResponse "User not found"
+// @Failure			500 {object} model.ApiResponse "Error updating user"
+// @Router			/users/{id} [put]
 func UpdateUser(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
+	if claims.Role != "admin" {
+		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		return
+	}
 
 	var req model.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -122,52 +133,55 @@ func UpdateUser(c *gin.Context) {
 	}
 
 	id := c.Param("id")
-
 	var user model.User
-	if err := database.DB.First(&user, id).Error; err != nil {
+	if err := database.DB.Where("id = ? AND is_active = ?", id, true).First(&user).Error; err != nil {
 		log.Println("Error finding user:", err)
-		utils.RespondWithError(c, "User not found", http.StatusInternalServerError)
+		utils.RespondWithError(c, "User not found", http.StatusNotFound)
 		return
 	}
 
-	user.Name = req.Name
-	user.LastName = req.LastName
-	user.Phone = req.Phone
-	user.Email = req.Email
-	user.LastModifiedAt = time.Now()
+	updated := model.User{
+		ID:             user.ID,
+		Name:           req.Name,
+		LastName:       req.LastName,
+		Phone:          req.Phone,
+		Email:          req.Email,
+		IsActive:       true,
+		CreatedAt:      user.CreatedAt,
+		LastModifiedAt: time.Now(),
+	}
 
-	if err := database.DB.Save(&user).Error; err != nil {
+	if err := database.DB.Save(&updated).Error; err != nil {
 		log.Println("Error updating user:", err)
 		utils.RespondWithError(c, "Error updating user", http.StatusInternalServerError)
 		return
 	}
 
-	if claims.Role == "admin" {
-		if err := database.DB.Model(&model.Employee{}).Where("user_id = ?", id).Update("role", req.Role).Error; err != nil {
-			log.Println("Error updating employee role:", err)
-			utils.RespondWithError(c, "Error updating user role", http.StatusInternalServerError)
-			return
-		}
+	if err := database.DB.Model(&model.Employee{}).
+		Where("user_id = ?", id).
+		Update("role", req.Role).Error; err != nil {
+		log.Println("Error updating employee role:", err)
+		utils.RespondWithError(c, "Error updating user role", http.StatusInternalServerError)
+		return
 	}
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
-		Message: "Successfully updated user",
+		Message: "User updated successfully",
 	})
 }
 
-// @Summary		Mark user as inactive
-// @Description	Marks the user as inactive instead of permanently deleting.
-// @Tags		users
-// @Produce		json
-// @Param		id path int true "User ID"
-// @Success		200	{object} model.ApiResponse "Successfully marked user as inactive"
-// @Failure		403	{object} model.ApiResponse "Insufficient permissions"
-// @Failure		500	{object} model.ApiResponse "Error updating user status"
-// @Router		/users/{id} [delete]
+// @Summary		    Mark user as inactive
+// @Description	    Marks the user as inactive instead of permanently deleting.
+// @Tags			users
+// @Produce		    json
+// @Param			id path int true "User ID"
+// @Success		    200 {object} model.ApiResponse "User successfully marked as inactive"
+// @Failure		    403 {object} model.ApiResponse "Insufficient permissions"
+// @Failure		    500 {object} model.ApiResponse "Error deleting user"
+// @Router			/users/{id} [delete]
 func DeleteUser(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
-
 	if claims.Role != "admin" {
 		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
 		return
@@ -175,19 +189,22 @@ func DeleteUser(c *gin.Context) {
 
 	id := c.Param("id")
 
-	if err := database.DB.Model(&model.User{}).
+	err := database.DB.Model(&model.User{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"deleted_at": time.Now(),
 			"is_active":  false,
-		}).Error; err != nil {
-		log.Println("Error updating user to inactive:", err)
+		}).Error
+
+	if err != nil {
+		log.Println("Error marking user as inactive:", err)
 		utils.RespondWithError(c, "Error deleting user", http.StatusInternalServerError)
 		return
 	}
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
-		Message: "Successfully marked user as inactive",
+		Message: "User successfully marked as inactive",
 	})
 }
+

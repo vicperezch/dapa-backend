@@ -6,25 +6,23 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// Determina si un rol es válido (admin o driver).
+// RoleValidator checks if the role string is valid.
+// Valid roles are "admin" or "driver".
 var RoleValidator validator.Func = func(fl validator.FieldLevel) bool {
 	role := fl.Field().String()
-
 	return role == "admin" || role == "driver"
 }
 
-// Realiza validaciones de contraseña.
-// Debe contener al menos 8 caracteres.
+// PasswordValidator validates the password field.
+// The password must be at least 8 characters long.
 var PasswordValidator validator.Func = func(fl validator.FieldLevel) bool {
 	password := fl.Field().String()
-
 	return utf8.RuneCountInString(password) >= 8
 }
 
-// Realiza validaciones para números de teléfono.
-// Deben contener únicamente dígitos.
+// PhoneValidator validates the phone number field.
+// The phone number must contain only digits.
 var PhoneValidator validator.Func = func(fl validator.FieldLevel) bool {
 	phone := fl.Field().String()
-
 	return IsAllDigits(phone)
 }

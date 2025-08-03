@@ -17,16 +17,17 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-//	@title			De aquí para allá API
-//	@version		0.1
-//	@description	API that provides the backend for the DAPA page.
+// @title           De aquí para allá API
+// @version         0.1
+// @description     API that provides the backend for the DAPA page.
 //
-//	@host			localhost:8080
-//	@BasePath		/api
+// @host            localhost:8080
+// @BasePath        /api
 func main() {
+	// Create a new Gin router instance with default middleware (logger and recovery)
 	router := gin.Default()
 
-	// Configuración CORS
+	// Configure CORS middleware to allow cross-origin requests
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
@@ -35,36 +36,39 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	// Implementación de los custom validators
+	// Register custom validators for request binding
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("validrole", utils.RoleValidator)
 		v.RegisterValidation("password", utils.PasswordValidator)
 		v.RegisterValidation("phone", utils.PhoneValidator)
 	}
 
+	// Connect to the database
 	database.ConnectToDatabase()
+
+	// Create initial admin user if none exists
 	if err := CreateFirstAdmin(); err != nil {
-		log.Fatal("Error creando admin inicial: ", err)
+		log.Fatal("Error creating initial admin: ", err)
 	}
 
-	// Configurar rutas
+	// Setup all routes for the API
 	routes.SetupRoutes(router)
 
-	// Endpoint para documentación
+	// Setup Swagger endpoint for API documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Iniciar servidor
+	// Start the server on port 8080
 	router.Run(":8080")
 }
 
+// CreateFirstAdmin checks if an admin user exists and creates one if not
 func CreateFirstAdmin() error {
-	// Verificar si ya existe un admin
 	var count int64
 	db := database.DB
+
 	db.Model(&model.Employee{}).Where("role = ?", "admin").Count(&count)
-	
 	if count > 0 {
-		return nil // Ya existe admin
+		return nil
 	}
 
 	hashedPassword, err := utils.HashPassword("dapa12345")
@@ -72,15 +76,17 @@ func CreateFirstAdmin() error {
 		return err
 	}
 
+	// Prepare admin user data
 	admin := model.Employee{
 		User: model.User{
-			Name:     "Admin",
-			Email:    "admin@dapa.com",
-			Phone:    "0000000000",
+			Name:  "Admin",
+			Email: "admin@dapa.com",
+			Phone: "0000000000",
 		},
 		Password: hashedPassword,
 		Role:     "admin",
 	}
 
+	// Insert the new admin into the database
 	return db.Create(&admin).Error
 }
