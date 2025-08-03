@@ -208,3 +208,4 @@ func DeleteVehicle(c *gin.Context) {
 		Message: "Vehicle successfully marked as inactive",
 	})
 }
+

@@ -3,13 +3,13 @@ package model
 import "time"
 
 type RegisterRequest struct {
-	Name              string    `json:"name" binding:"required"`
-	LastName          string    `json:"lastName" binding:"required"`
-	Phone             string    `json:"phone" binding:"required,phone"`
-	Email             string    `json:"email" binding:"required,email"`
-	LicenseExpiration time.Time `json:"licenseExpirationDate"`
-	Password          string    `json:"password" binding:"required,password"`
-	Role              string    `json:"role" binding:"required,validrole"`
+	Name                  string    `json:"name" binding:"required"`
+	LastName              string    `json:"lastName" binding:"required"`
+	Phone                 string    `json:"phone" binding:"required,phone"`
+	Email                 string    `json:"email" binding:"required,email"`
+	LicenseExpirationDate time.Time `json:"licenseExpirationDate"`
+	Password              string    `json:"password" binding:"required,password"`
+	Role                  string    `json:"role" binding:"required,validrole"`
 }
 
 type PasswordResetRequest struct {
@@ -21,19 +21,13 @@ type NewPasswordRequest struct {
 	NewPassword string `json:"newPassword" binding:"required,password"`
 }
 
-type CreateUserRequest struct {
-	Name     string `json:"name" binding:"required"`
-	LastName string `json:"lastName" binding:"required"`
-	Phone    string `json:"phone" binding:"required"`
-	Email    string `json:"email"`
-}
-
 type UpdateUserRequest struct {
-	Name     string `json:"name" binding:"required"`
-	LastName string `json:"lastName" binding:"required"`
-	Phone    string `json:"phone" binding:"required"`
-	Email    string `json:"email"`
-	Role     string `json:"role" binding:"required,validrole"`
+	Name                  string    `json:"name" binding:"required"`
+	LastName              string    `json:"lastName" binding:"required"`
+	Phone                 string    `json:"phone" binding:"required"`
+	Email                 string    `json:"email"`
+	Role                  string    `json:"role" binding:"required,validrole"`
+	LicenseExpirationDate time.Time `json:"licenseExpirationDate"`
 }
 
 type CreateVehicleRequest struct {

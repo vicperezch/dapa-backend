@@ -5,29 +5,22 @@ import (
 )
 
 type User struct {
-	ID             uint       `json:"id" gorm:"primaryKey"`
-	Name           string     `json:"name" gorm:"size:50;not null"`
-	LastName       string     `json:"lastName" gorm:"column:last_name;size:50;not null"`
-	Phone          string     `json:"phone" gorm:"size:20;not null"`
-	CreatedAt      time.Time  `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
-	Email          string     `json:"email" gorm:"default:unknown;unique"`
-	LastModifiedAt time.Time  `json:"lastModifiedAt" gorm:"column:last_modified_at;autoUpdateTime"`
-	DeletedAt      *time.Time `json:"deletedAt" gorm:"column:deleted_at"`
-	IsActive       bool       `json:"isActive" gorm:"column:is_active;default:true"`
-}
-
-type Employee struct {
-	ID                uint `json:"id" gorm:"primaryKey"`
-	UserID            uint
-	User              User      `gorm:"constraint:OnDelete:CASCADE"`
-	LicenseExpiration time.Time `json:"licenseExpirationDate" gorm:"column:license_expiration_date"`
-	Password          string    `json:"password"`
-	Role              string    `json:"role" gorm:"size:20;not null"`
+	ID                    uint       `json:"id" gorm:"primaryKey"`
+	Name                  string     `json:"name" gorm:"size:50;not null"`
+	LastName              string     `json:"lastName" gorm:"column:last_name;size:50;not null"`
+	Phone                 string     `json:"phone" gorm:"size:20;not null"`
+	Email                 string     `json:"email" gorm:"default:unknown;unique"`
+	PasswordHash          string     `json:"password" gorm:"column:password_hash"`
+	Role                  string     `json:"role" gorm:"size:20;not null"`
+	LicenseExpirationDate time.Time  `json:"licenseExpirationDate" gorm:"column:license_expiration_date"`
+	CreatedAt             time.Time  `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
+	LastModifiedAt        time.Time  `json:"lastModifiedAt" gorm:"column:last_modified_at;autoUpdateTime"`
+	DeletedAt             *time.Time `json:"deletedAt" gorm:"column:deleted_at"`
+	IsActive              bool       `json:"isActive" gorm:"column:is_active;default:true"`
 }
 
 type UserWithRole struct {
 	User
-	Role string `json:"role"`
 }
 
 type Vehicle struct {
