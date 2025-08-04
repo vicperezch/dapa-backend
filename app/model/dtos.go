@@ -31,23 +31,21 @@ type UpdateUserRequest struct {
 }
 
 type CreateVehicleRequest struct {
-	Brand                  string  `json:"brand" binding:"required"`
-	Model                  string  `json:"model" binding:"required"`
-	LicensePlate           string  `json:"licensePlate" binding:"required"`
-	CapacityKg             float64 `json:"capacityKg" binding:"required,gt=0"`
-	Available              *bool   `json:"available" binding:"required"`
-	CurrentMileage         float64 `json:"currentMileage" binding:"required,gt=0"`
-	NextMaintenanceMileage float64 `json:"nextMaintenanceMileage" binding:"required,gt=0"`
+	Brand         string    `json:"brand" binding:"required"`
+	Model         string    `json:"model" binding:"required"`
+	LicensePlate  string    `json:"licensePlate" binding:"required"`
+	CapacityKg    float64   `json:"capacityKg" binding:"required,gt=0"`
+	Available     bool      `json:"available" binding:"required"`
+	InsuranceDate time.Time `json:"insuranceDate" binding:"requried"`
 }
 
 type UpdateVehicleRequest struct {
-	Brand                  string  `json:"brand" binding:"required"`
-	Model                  string  `json:"model" binding:"required"`
-	LicensePlate           string  `json:"licensePlate" binding:"required"`
-	CapacityKg             float64 `json:"capacityKg" binding:"required,gt=0"`
-	Available              *bool   `json:"available" binding:"required"`
-	CurrentMileage         float64 `json:"currentMileage" binding:"required,gt=0"`
-	NextMaintenanceMileage float64 `json:"nextMaintenanceMileage" binding:"required,gt=0"`
+	Brand         string    `json:"brand" binding:"required"`
+	Model         string    `json:"model" binding:"required"`
+	LicensePlate  string    `json:"licensePlate" binding:"required"`
+	CapacityKg    float64   `json:"capacityKg" binding:"required,gt=0"`
+	Available     bool      `json:"available" binding:"required"`
+	InsuranceDate time.Time `json:"insuranceDate" binding:"requried"`
 }
 
 type AssignQuote struct {

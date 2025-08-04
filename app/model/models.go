@@ -19,23 +19,18 @@ type User struct {
 	IsActive              bool       `json:"isActive" gorm:"column:is_active;default:true"`
 }
 
-type UserWithRole struct {
-	User
-}
-
 type Vehicle struct {
-	ID                     uint       `json:"id" gorm:"primaryKey"`
-	Brand                  string     `json:"brand" gorm:"size:50;not null"`
-	Model                  string     `json:"model" gorm:"size:50;not null"`
-	LicensePlate           string     `json:"licensePlate" gorm:"size:15;not null;unique"`
-	CapacityKg             float64    `json:"capacityKg" gorm:"column:capacity_kg"`
-	Available              *bool      `json:"available"`
-	CurrentMileage         float64    `json:"currentMileage" gorm:"column:current_mileage;not null;"`
-	NextMaintenanceMileage float64    `json:"nextMaintenanceMileage" gorm:"column:next_maintenance_mileage;not null;"`
-	CreatedAt              time.Time  `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
-	LastModifiedAt         time.Time  `json:"lastModifiedAt" gorm:"column:last_modified_at;autoUpdateTime"`
-	DeletedAt              *time.Time `json:"deletedAt" gorm:"column:deleted_at"`
-	IsActive               bool       `json:"isActive" gorm:"column:is_active;default:true"`
+	ID             uint       `json:"id" gorm:"primaryKey"`
+	Brand          string     `json:"brand" gorm:"size:50;not null"`
+	Model          string     `json:"model" gorm:"size:50;not null"`
+	LicensePlate   string     `json:"licensePlate" gorm:"size:15;not null;unique"`
+	CapacityKg     float64    `json:"capacityKg" gorm:"column:capacity_kg"`
+	Available      bool       `json:"available"`
+	InsuranceDate  time.Time  `json:"insuranceDate" gorm:"column:insurance"`
+	CreatedAt      time.Time  `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
+	LastModifiedAt time.Time  `json:"lastModifiedAt" gorm:"column:last_modified_at;autoUpdateTime"`
+	DeletedAt      *time.Time `json:"deletedAt" gorm:"column:deleted_at"`
+	IsActive       bool       `json:"isActive" gorm:"column:is_active;default:true"`
 }
 
 type Quote struct {

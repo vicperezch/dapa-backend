@@ -49,12 +49,11 @@ func TestGetVehicleById_Success(t *testing.T) {
 	db := setupVehicleTestContext()
 
 	vehicle := model.Vehicle{
-		Brand:                  "Toyota",
-		IsActive:               true,
-		CreatedAt:              time.Now(),
-		CapacityKg:             100,
-		CurrentMileage:         500,
-		NextMaintenanceMileage: 100,
+		Brand:         "Toyota",
+		IsActive:      true,
+		CreatedAt:     time.Now(),
+		CapacityKg:    100,
+		InsuranceDate: time.Now(),
 	}
 	db.Create(&vehicle)
 
@@ -76,16 +75,13 @@ func TestCreateVehicle_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	setupVehicleTestContext()
 
-	available := true
-
 	vehicle := model.CreateVehicleRequest{
-		Brand:                  "Ford",
-		Model:                  "Transit",
-		LicensePlate:           "XYZ-123",
-		CapacityKg:             1000,
-		Available:              &available,
-		CurrentMileage:         20000,
-		NextMaintenanceMileage: 25000,
+		Brand:         "Ford",
+		Model:         "Transit",
+		LicensePlate:  "XYZ-123",
+		CapacityKg:    1000,
+		Available:     true,
+		InsuranceDate: time.Now(),
 	}
 
 	body, _ := json.Marshal(vehicle)
