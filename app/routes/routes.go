@@ -49,26 +49,25 @@ func SetupRoutes(router *gin.Engine) {
 		admin.PUT("/vehicles/:id", handlers.UpdateVehicle)
 		admin.DELETE("/vehicles/:id", handlers.DeleteVehicle)
 
-				// FORMULARIO: Tipos de pregunta
-				admin.POST("/question-types", handlers.CreateQuestionType)
+		// FORMULARIO: Tipos de pregunta
+		admin.POST("/question-types", handlers.CreateQuestionType)
 
-				// FORMULARIO: Preguntas
-				admin.POST("/questions", handlers.CreateQuestion)
-				admin.PUT("/questions/:id", handlers.UpdateQuestion)
-				admin.DELETE("/questions/:id", handlers.DeleteQuestion)
+		// FORMULARIO: Preguntas
+		admin.POST("/questions", handlers.CreateQuestion)
+		admin.PUT("/questions/:id", handlers.UpdateQuestion)
+		admin.DELETE("/questions/:id", handlers.DeleteQuestion)
 
-				// FORMULARIO: Opciones de pregunta
-				admin.POST("/questions/:questionId/options", handlers.CreateQuestionOption)
+		// FORMULARIO: Opciones de pregunta
+		admin.POST("/questions/:questionId/options", handlers.CreateQuestionOption)
 
-				// FORMULARIO: Envíos (admin puede ver y actualizar estado)
-				admin.PUT("/submissions/:id/status", handlers.UpdateSubmissionStatus)
+		// FORMULARIO: Envíos (admin puede ver y actualizar estado)
+		admin.PUT("/submissions/:id/status", handlers.UpdateSubmissionStatus)
 	}
 
 	// Driver-only routes group (currently empty, placeholder for future driver endpoints)
 	driver := protected.Group("")
 	driver.Use(middlewares.RoleRequired("driver"))
 	{
-				// Ejemplo: El driver puede ver submissions asignados a su viaje
-				driver.GET("/driver/submissions", handlers.GetDriverSubmissions)		// Add driver-specific routes here
+		// Add driver-specific routes here
 	}
 }

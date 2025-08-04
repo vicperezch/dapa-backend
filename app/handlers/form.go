@@ -1,13 +1,14 @@
 package handlers
 
 import (
-    "dapa/app/model"
-    "dapa/app/utils"
-    "dapa/database"
-    "net/http"
-    "time"
+	"dapa/app/model"
+	"dapa/app/utils"
+	"dapa/database"
+	"net/http"
+	"strconv"
+	"time"
 
-    "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 )
 
 // ---------- TIPOS DE PREGUNTA ----------
@@ -110,7 +111,6 @@ func UpdateQuestion(c *gin.Context) {
     if req.IsActive != nil {
         question.IsActive = *req.IsActive
     }
-    question.LastModifiedAt = time.Now()
     if err := database.DB.Save(&question).Error; err != nil {
         utils.RespondWithError(c, "Error al actualizar pregunta", http.StatusInternalServerError)
         return
@@ -139,12 +139,18 @@ func DeleteQuestion(c *gin.Context) {
 // Crear opción
 func CreateQuestionOption(c *gin.Context) {
     var req model.QuestionOptionRequest
-    questionID := c.Param("questionId")
-    option := model.QuestionOption{QuestionID: utils.ParseUint(questionID), Option: req.Option}
+    questionID, err := strconv.Atoi(c.Param("questionId"))
+    if err != nil {
+	    utils.RespondWithError(c, "ID inválido", http.StatusBadRequest)
+	    return
+    }
+    option := model.QuestionOption{QuestionID: uint(questionID), Option: req.Option}
     if err := database.DB.Create(&option).Error; err != nil {
         utils.RespondWithError(c, "Error al crear opción", http.StatusInternalServerError)
         return
     }
+    
+
     utils.RespondWithJSON(c, model.ApiResponse{Success: true, Data: option})
 }
 
