@@ -57,33 +57,34 @@ type Vehicle struct {
 // Tipos de preguntas disponibles
 type QuestionType struct {
 	ID   uint   `json:"id" gorm:"primaryKey"`
-	Type string `json:"type" gorm:"size:50;not null"`
+	Type string `json:"type" gorm:"size:50;not null" validate:"required,question_type"`
 }
 
 // Pregunta del formulario
 type Question struct {
-	ID          uint           `json:"id" gorm:"primaryKey"`
-	Question    string         `json:"question" gorm:"size:50;not null"`
-	Description *string        `json:"description,omitempty" gorm:"size:255"`
-	TypeID      uint           `json:"typeId" gorm:"not null"`
-	IsActive    bool           `json:"isActive" gorm:"not null;default:true"`
-	Type        QuestionType   `json:"type" gorm:"foreignKey:TypeID"`
+	ID          uint             `json:"id" gorm:"primaryKey"`
+	Question    string           `json:"question" gorm:"size:50;not null" validate:"required,question_text"`
+	Description *string          `json:"description,omitempty" gorm:"size:255" validate:"omitempty,question_desc"`
+	TypeID      uint             `json:"typeId" gorm:"not null" validate:"required,gt=0"`
+	IsActive    bool             `json:"isActive" gorm:"not null;default:true"`
+	Type        QuestionType     `json:"type" gorm:"foreignKey:TypeID"`
 	Options     []QuestionOption `json:"options,omitempty" gorm:"foreignKey:QuestionID"`
 }
+
 
 // Opciones de una pregunta
 type QuestionOption struct {
 	ID         uint   `json:"id" gorm:"primaryKey"`
-	QuestionID uint   `json:"questionId" gorm:"not null"`
-	Option     string `json:"option" gorm:"size:50;not null"`
+	QuestionID uint   `json:"questionId" gorm:"not null" validate:"required,gt=0"`
+	Option     string `json:"option" gorm:"size:50;not null" validate:"required,question_option"`
 }
 
 // Envío de formulario
 type Submission struct {
 	ID          uint       `json:"id" gorm:"primaryKey"`
-	UserID      uint       `json:"userId" gorm:"not null"`
+	UserID      uint       `json:"userId" gorm:"not null" validate:"required,gt=0"`
 	SubmittedAt time.Time  `json:"submittedAt" gorm:"default:CURRENT_TIMESTAMP"`
-	Status      FormStatus `json:"status" gorm:"type:form_status;not null;default:'pending'"`
+	Status      FormStatus `json:"status" gorm:"type:form_status;not null;default:'pending'" validate:"required,submission_status"`
 	User        User       `json:"user" gorm:"foreignKey:UserID"`
 	Answers     []Answer   `json:"answers,omitempty" gorm:"foreignKey:SubmissionID"`
 }
@@ -91,10 +92,10 @@ type Submission struct {
 // Respuesta a una pregunta
 type Answer struct {
 	ID           uint            `json:"id" gorm:"primaryKey"`
-	SubmissionID uint            `json:"submissionId" gorm:"not null"`
-	QuestionID   *uint           `json:"questionId,omitempty"`
-	Answer       *string         `json:"answer,omitempty"`
-	OptionID     *uint           `json:"optionId,omitempty"`
+	SubmissionID uint            `json:"submissionId" gorm:"not null" validate:"required,gt=0"`
+	QuestionID   *uint           `json:"questionId,omitempty" validate:"omitempty,gt=0"`
+	Answer       *string         `json:"answer,omitempty" validate:"omitempty,max=255"`
+	OptionID     *uint           `json:"optionId,omitempty" validate:"omitempty,gt=0"`
 	Question     *Question       `json:"question,omitempty" gorm:"foreignKey:QuestionID"`
 	Option       *QuestionOption `json:"option,omitempty" gorm:"foreignKey:OptionID"`
 }

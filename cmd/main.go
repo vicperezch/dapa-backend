@@ -41,6 +41,11 @@ func main() {
 		v.RegisterValidation("validrole", utils.RoleValidator)
 		v.RegisterValidation("password", utils.PasswordValidator)
 		v.RegisterValidation("phone", utils.PhoneValidator)
+		v.RegisterValidation("question_text", utils.QuestionTextValidator)
+		v.RegisterValidation("question_desc", utils.QuestionDescriptionValidator)
+		v.RegisterValidation("question_type", utils.QuestionTypeValidator)
+		v.RegisterValidation("question_option", utils.QuestionOptionValidator)
+		v.RegisterValidation("submission_status", utils.SubmissionStatusValidator)
 	}
 
 	// Connect to the database
