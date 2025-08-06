@@ -101,6 +101,7 @@ func UpdateUser(c *gin.Context) {
 		LastName:              req.LastName,
 		Phone:                 req.Phone,
 		Email:                 req.Email,
+		Role:                  req.Role,
 		LicenseExpirationDate: req.LicenseExpirationDate,
 		IsActive:              true,
 		CreatedAt:             user.CreatedAt,

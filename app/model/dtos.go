@@ -36,7 +36,7 @@ type CreateVehicleRequest struct {
 	LicensePlate  string    `json:"licensePlate" binding:"required"`
 	CapacityKg    float64   `json:"capacityKg" binding:"required,gt=0"`
 	Available     bool      `json:"available" binding:"required"`
-	InsuranceDate time.Time `json:"insuranceDate" binding:"requried"`
+	InsuranceDate time.Time `json:"insuranceDate" binding:"required"`
 }
 
 type UpdateVehicleRequest struct {
@@ -45,7 +45,7 @@ type UpdateVehicleRequest struct {
 	LicensePlate  string    `json:"licensePlate" binding:"required"`
 	CapacityKg    float64   `json:"capacityKg" binding:"required,gt=0"`
 	Available     bool      `json:"available" binding:"required"`
-	InsuranceDate time.Time `json:"insuranceDate" binding:"requried"`
+	InsuranceDate time.Time `json:"insuranceDate" binding:"required"`
 }
 
 type AssignQuote struct {
