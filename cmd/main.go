@@ -55,6 +55,7 @@ func main() {
 	if err := CreateFirstAdmin(); err != nil {
 		log.Fatal("Error creating initial admin: ", err)
 	}
+	SeedQuestionTypes()
 
 	// Setup all routes for the API
 	routes.SetupRoutes(router)
@@ -92,4 +93,25 @@ func CreateFirstAdmin() error {
 
 	// Insert the new admin into the database
 	return db.Create(&admin).Error
+}
+
+//Seed question types adds the four common types of questions
+func SeedQuestionTypes() {
+    questionTypes := []string{"text", "multiple", "unique", "dropdown"}
+    
+    for _, typeName := range questionTypes {
+        var existingType model.QuestionType
+        result := database.DB.Where("type = ?", typeName).First(&existingType)
+        
+        if result.Error != nil {
+            newType := model.QuestionType{Type: typeName}
+            if err := database.DB.Create(&newType).Error; err != nil {
+                log.Printf("Error creating question type %s: %v", typeName, err)
+            } else {
+                log.Printf("Question type '%s' created with ID: %d", typeName, newType.ID)
+            }
+        } else {
+            log.Printf("Question type '%s' already exists with ID: %d", typeName, existingType.ID)
+        }
+    }
 }

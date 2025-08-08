@@ -53,9 +53,12 @@ func SetupRoutes(router *gin.Engine) {
 		admin.POST("/quotes/:id", handlers.AssignQuoteInfo)
 
 		// FORMULARIO: Tipos de pregunta
+		admin.GET("/question-types", handlers.GetQuestionTypes)
 		admin.POST("/question-types", handlers.CreateQuestionType)
 
 		// FORMULARIO: Preguntas
+		admin.GET("/questions", handlers.GetQuestions)
+		admin.GET("/questions-active", handlers.GetActiveQuestions)
 		admin.POST("/questions", handlers.CreateQuestion)
 		admin.PUT("/questions/:id", handlers.UpdateQuestion)
 		admin.DELETE("/questions/:id", handlers.DeleteQuestion)

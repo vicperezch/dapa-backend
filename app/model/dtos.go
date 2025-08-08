@@ -63,7 +63,9 @@ type UpdateQuestionTypeRequest struct {
 }
 
 type QuestionOptionRequest struct {
-	Option string `json:"option" binding:"required,max=50"`
+	ID         uint   `json:"id" gorm:"primaryKey"`
+	QuestionID uint   `json:"questionId" gorm:"not null" validate:"required,gt=0"`
+	Option     string `json:"option" gorm:"size:50;not null" validate:"required,question_option"`
 }
 
 type CreateQuestionRequest struct {
