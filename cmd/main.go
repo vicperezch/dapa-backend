@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"dapa/app/utils"
-	"dapa/app/routes"
-	"dapa/database"
 	"dapa/app/model"
+	"dapa/app/routes"
+	"dapa/app/utils"
+	"dapa/database"
 	_ "dapa/docs"
 
 	"github.com/gin-contrib/cors"
@@ -71,7 +71,7 @@ func CreateFirstAdmin() error {
 	var count int64
 	db := database.DB
 
-	db.Model(&model.Employee{}).Where("role = ?", "admin").Count(&count)
+	db.Model(&model.User{}).Where("role = ?", "admin").Count(&count)
 	if count > 0 {
 		return nil
 	}
@@ -82,14 +82,12 @@ func CreateFirstAdmin() error {
 	}
 
 	// Prepare admin user data
-	admin := model.Employee{
-		User: model.User{
-			Name:  "Admin",
-			Email: "admin@dapa.com",
-			Phone: "0000000000",
-		},
-		Password: hashedPassword,
-		Role:     "admin",
+	admin := model.User{
+		Name:         "Admin",
+		Email:        "admin@dapa.com",
+		Phone:        "0000000000",
+		PasswordHash: hashedPassword,
+		Role:         "admin",
 	}
 
 	// Insert the new admin into the database

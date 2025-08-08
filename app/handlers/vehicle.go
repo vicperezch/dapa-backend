@@ -4,7 +4,6 @@ import (
 	"dapa/app/model"
 	"dapa/app/utils"
 	"dapa/database"
-	"log"
 	"net/http"
 	"time"
 
@@ -32,7 +31,6 @@ func GetVehicles(c *gin.Context) {
 		Find(&vehicles).Error
 
 	if err != nil {
-		log.Println("Error fetching vehicles:", err)
 		utils.RespondWithError(c, "Error retrieving vehicles", http.StatusInternalServerError)
 		return
 	}
@@ -64,7 +62,6 @@ func GetVehicleById(c *gin.Context) {
 		First(&vehicle).Error
 
 	if err != nil {
-		log.Println("Error fetching vehicle:", err)
 		utils.RespondWithError(c, "Vehicle not found", http.StatusNotFound)
 		return
 	}
@@ -92,7 +89,6 @@ func UpdateVehicle(c *gin.Context) {
 
 	var req model.UpdateVehicleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Println("Error parsing request:", err)
 		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
 		return
 	}
@@ -100,27 +96,24 @@ func UpdateVehicle(c *gin.Context) {
 	id := c.Param("id")
 	var vehicle model.Vehicle
 	if err := database.DB.Where("id = ? AND is_active = ?", id, true).First(&vehicle).Error; err != nil {
-		log.Println("Error finding vehicle:", err)
 		utils.RespondWithError(c, "Vehicle not found", http.StatusNotFound)
 		return
 	}
 
 	updated := model.Vehicle{
-		ID:                     vehicle.ID,
-		Brand:                  req.Brand,
-		Model:                  req.Model,
-		LicensePlate:           req.LicensePlate,
-		CapacityKg:             req.CapacityKg,
-		Available:              req.Available,
-		CurrentMileage:         req.CurrentMileage,
-		NextMaintenanceMileage: req.NextMaintenanceMileage,
-		IsActive:               true,
-		CreatedAt:              vehicle.CreatedAt,
-		LastModifiedAt:         time.Now(),
+		ID:             vehicle.ID,
+		Brand:          req.Brand,
+		Model:          req.Model,
+		LicensePlate:   req.LicensePlate,
+		CapacityKg:     req.CapacityKg,
+		Available:      req.Available,
+		InsuranceDate:  req.InsuranceDate,
+		IsActive:       true,
+		CreatedAt:      vehicle.CreatedAt,
+		LastModifiedAt: time.Now(),
 	}
 
 	if err := database.DB.Save(&updated).Error; err != nil {
-		log.Println("Error updating vehicle:", err)
 		utils.RespondWithError(c, "Error updating vehicle", http.StatusInternalServerError)
 		return
 	}
@@ -144,24 +137,21 @@ func UpdateVehicle(c *gin.Context) {
 func CreateVehicle(c *gin.Context) {
 	var req model.CreateVehicleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Println("Error parsing request:", err)
 		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
 		return
 	}
 
 	vehicle := model.Vehicle{
-		Brand:                  req.Brand,
-		Model:                  req.Model,
-		LicensePlate:           req.LicensePlate,
-		CapacityKg:             req.CapacityKg,
-		Available:              req.Available,
-		CurrentMileage:         req.CurrentMileage,
-		NextMaintenanceMileage: req.NextMaintenanceMileage,
+		Brand:         req.Brand,
+		Model:         req.Model,
+		LicensePlate:  req.LicensePlate,
+		CapacityKg:    req.CapacityKg,
+		Available:     req.Available,
+		InsuranceDate: req.InsuranceDate,
 	}
 
 	err := database.DB.Create(&vehicle).Error
 	if err != nil {
-		log.Println("Error creating new vehicle:", err)
 		utils.RespondWithError(c, "Error creating vehicle", http.StatusInternalServerError)
 		return
 	}
@@ -192,19 +182,18 @@ func DeleteVehicle(c *gin.Context) {
 
 	err := database.DB.Model(&model.Vehicle{}).
 		Where("id = ?", id).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"deleted_at": time.Now(),
 			"is_active":  false,
 		}).Error
 
 	if err != nil {
-		log.Println("Error marking vehicle as inactive:", err)
 		utils.RespondWithError(c, "Error deleting vehicle", http.StatusInternalServerError)
 		return
 	}
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
-		Message: "Vehicle successfully marked as inactive",
+		Message: "Vehicle successfully deleted",
 	})
 }

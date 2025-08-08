@@ -14,15 +14,14 @@ var jwtSecret = []byte(EnvMustGet("JWT_SECRET"))
 
 // GenerateToken creates a JWT token for the given employee.
 // The token includes employee details as claims and expires after 24 hours.
-func GenerateToken(employee *model.Employee) (string, error) {
+func GenerateToken(user *model.User) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 
 	claims := &model.EmployeeClaims{
-		EmployeeID: employee.ID,
-		UserID:     employee.UserID,
-		Name:       employee.User.Name + " " + employee.User.LastName,
-		Email:      employee.User.Email,
-		Role:       employee.Role,
+		UserID: user.ID,
+		Name:   user.Name + " " + user.LastName,
+		Email:  user.Email,
+		Role:   user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -38,7 +37,7 @@ func GenerateToken(employee *model.Employee) (string, error) {
 func ValidateToken(tokenString string) (*model.EmployeeClaims, error) {
 	claims := &model.EmployeeClaims{}
 
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
 		}
@@ -55,3 +54,4 @@ func ValidateToken(tokenString string) (*model.EmployeeClaims, error) {
 
 	return claims, nil
 }
+

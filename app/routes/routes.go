@@ -49,6 +49,9 @@ func SetupRoutes(router *gin.Engine) {
 		admin.PUT("/vehicles/:id", handlers.UpdateVehicle)
 		admin.DELETE("/vehicles/:id", handlers.DeleteVehicle)
 
+		admin.GET("/quotes", handlers.GetQuotes)
+		admin.POST("/quotes/:id", handlers.AssignQuoteInfo)
+
 		// FORMULARIO: Tipos de pregunta
 		admin.POST("/question-types", handlers.CreateQuestionType)
 
@@ -71,3 +74,4 @@ func SetupRoutes(router *gin.Engine) {
 		// Add driver-specific routes here
 	}
 }
+

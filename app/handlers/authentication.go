@@ -5,7 +5,6 @@ import (
 	"dapa/app/utils"
 	"dapa/database"
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -35,8 +34,6 @@ func RegisterHandler(c *gin.Context) {
 	var err error
 
 	if err = c.ShouldBindJSON(&req); err != nil {
-		log.Println("Error parsing request: ", err)
-
 		var ve validator.ValidationErrors
 		if errors.As(err, &ve) {
 			errorMessages := make([]string, len(ve))
@@ -55,24 +52,21 @@ func RegisterHandler(c *gin.Context) {
 
 	passwordHash, err := utils.HashPassword(req.Password)
 	if err != nil {
-		log.Println("Error hashing password: ", err)
 		utils.RespondWithError(c, "Error hashing password", http.StatusInternalServerError)
 		return
 	}
 
-	employee := model.Employee{
-		User: model.User{
-			Name:     req.Name,
-			LastName: req.LastName,
-			Phone:    req.Phone,
-			Email:    req.Email,
-		},
-		LicenseExpiration: req.LicenseExpiration,
-		Password:          passwordHash,
-		Role:              req.Role,
+	user := model.User{
+		Name:                  req.Name,
+		LastName:              req.LastName,
+		Phone:                 req.Phone,
+		Email:                 req.Email,
+		LicenseExpirationDate: req.LicenseExpirationDate,
+		PasswordHash:          passwordHash,
+		Role:                  req.Role,
 	}
 
-	if err = database.DB.Create(&employee).Error; err != nil {
+	if err = database.DB.Create(&user).Error; err != nil {
 		utils.RespondWithError(c, "Error registrando al usuario", http.StatusInternalServerError)
 		return
 	}
@@ -97,30 +91,27 @@ func RegisterHandler(c *gin.Context) {
 func LoginHandler(c *gin.Context) {
 	var req model.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Println("Error parsing request: ", err)
 		utils.RespondWithError(c, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	var employee model.Employee
+	var user model.User
 
-	err := database.DB.Preload("User").
-		Joins("JOIN users ON users.id = employees.user_id").
-		Where("users.email = ? AND users.is_active = ?", req.Email, true).
-		First(&employee).Error
+	err := database.DB.
+		Where("email = ? AND is_active = ?", req.Email, true).
+		First(&user).Error
 
 	if err != nil {
-		log.Println("Error finding user: ", err)
 		utils.RespondWithError(c, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
 
-	if !utils.CheckPassword(req.Password, employee.Password) {
+	if !utils.CheckPassword(req.Password, user.PasswordHash) {
 		utils.RespondWithError(c, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
 
-	token, err := utils.GenerateToken(&employee)
+	token, err := utils.GenerateToken(&user)
 	if err != nil {
 		utils.RespondWithError(c, "Failed to generate token", http.StatusInternalServerError)
 		return
@@ -163,11 +154,11 @@ func PasswordResetHandler(c *gin.Context) {
 		return
 	}
 
-	var employee model.Employee
-	database.DB.Where("is_active = ? and email = ?", true, login).Scan(&employee)
+	var user model.User
+	database.DB.Where("is_active = ? and email = ?", true, login).Scan(&user)
 
-	employee.Password = paswordHash
-	database.DB.Save(&employee)
+	user.PasswordHash = paswordHash
+	database.DB.Save(&user)
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
