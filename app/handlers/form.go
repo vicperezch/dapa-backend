@@ -327,6 +327,32 @@ func GetSubmissions(c *gin.Context) {
 	utils.RespondWithJSON(c, submissions)
 }
 
+//Obtener estadisticas de las submissions
+func GetSubmissionStats(c *gin.Context) {
+    var stats model.SubmissionStats
+
+    // Total submissions
+    database.DB.Model(&model.Submission{}).Count(&stats.TotalSubmissions)
+
+    // Submissions by status
+    database.DB.Model(&model.Submission{}).
+        Select("status, COUNT(*) as count").
+        Group("status").Scan(&stats.SubmissionsByStatus)
+
+    // Submissions by user
+    database.DB.Model(&model.Submission{}).
+        Select("user_id, COUNT(*) as count").
+        Group("user_id").Scan(&stats.SubmissionsByUser)
+
+    // Answers distribution by question/option
+    database.DB.Model(&model.Answer{}).
+        Select("question_id, option_id, COUNT(*) as count").
+        Group("question_id, option_id").
+        Scan(&stats.AnswersByQuestion)
+
+    utils.RespondWithJSON(c, stats)
+}
+
 // Actualizar estado de envío
 func UpdateSubmissionStatus(c *gin.Context) {
 	id := c.Param("id")

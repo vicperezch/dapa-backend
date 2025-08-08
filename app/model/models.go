@@ -112,4 +112,26 @@ type Answer struct {
 	Question     *Question       `json:"question,omitempty" gorm:"foreignKey:QuestionID"`
 	Option       *QuestionOption `json:"option,omitempty" gorm:"foreignKey:OptionID"`
 }
+type SubmissionStats struct {
+    TotalSubmissions     int64                       `json:"totalSubmissions"`
+    SubmissionsByStatus  []StatusCount               `json:"submissionsByStatus"`
+    SubmissionsByUser    []UserCount                 `json:"submissionsByUser"`
+    AnswersByQuestion    []QuestionAnswerDistribution `json:"answersByQuestion"`
+}
+
+type StatusCount struct {
+    Status string `json:"status"`
+    Count  int64  `json:"count"`
+}
+
+type UserCount struct {
+    UserID uint  `json:"userId"`
+    Count  int64 `json:"count"`
+}
+
+type QuestionAnswerDistribution struct {
+    QuestionID uint  `json:"questionId"`
+    OptionID   uint  `json:"optionId"`
+    Count      int64 `json:"count"`
+}
 
