@@ -96,7 +96,6 @@ type AnswerRequest struct {
 }
 
 type CreateSubmissionRequest struct {
-	UserID  uint            `json:"userId" binding:"required"`
 	Answers []AnswerRequest `json:"answers" binding:"required,min=1"`
 }
 

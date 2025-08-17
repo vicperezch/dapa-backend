@@ -349,6 +349,28 @@ func ReorderQuestions(c *gin.Context) {
 	})
 }
 
+func ToggleQuestionActive(c *gin.Context) {
+    id := c.Param("id")
+
+    var question model.Question
+    if err := database.DB.First(&question, id).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
+        return
+    }
+
+    question.IsActive = !question.IsActive
+
+    if err := database.DB.Save(&question).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update question"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "id":        question.ID,
+        "is_active": question.IsActive,
+    })
+}
+
 
 // Eliminar pregunta
 func DeleteQuestion(c *gin.Context) {
@@ -394,7 +416,6 @@ func CreateSubmission(c *gin.Context) {
 		return
 	}
 	sub := model.Submission{
-		UserID:      req.UserID,
 		SubmittedAt: time.Now(),
 		Status:      model.FormStatusPending,
 	}
@@ -436,11 +457,6 @@ func GetSubmissionStats(c *gin.Context) {
     database.DB.Model(&model.Submission{}).
         Select("status, COUNT(*) as count").
         Group("status").Scan(&stats.SubmissionsByStatus)
-
-    // Submissions by user
-    database.DB.Model(&model.Submission{}).
-        Select("user_id, COUNT(*) as count").
-        Group("user_id").Scan(&stats.SubmissionsByUser)
 
     // Answers distribution by question/option
     database.DB.Model(&model.Answer{}).

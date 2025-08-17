@@ -93,15 +93,14 @@ type QuestionOption struct {
 	ID         uint   `json:"id" gorm:"primaryKey"`
 	QuestionID uint   `json:"questionId" gorm:"not null" validate:"required,gt=0"`
 	Option     string `json:"option" gorm:"size:50;not null" validate:"required,question_option"`
+	DeletedAt  gorm.DeletedAt   `json:"deletedAt,omitempty" gorm:"index"`
 }
 
 // Envío de formulario
 type Submission struct {
 	ID          uint       `json:"id" gorm:"primaryKey"`
-	UserID      uint       `json:"userId" gorm:"not null" validate:"required,gt=0"`
 	SubmittedAt time.Time  `json:"submittedAt" gorm:"default:CURRENT_TIMESTAMP"`
 	Status      FormStatus `json:"status" gorm:"type:form_status;not null;default:'pending'" validate:"required,submission_status"`
-	User        User       `json:"user" gorm:"foreignKey:UserID"`
 	Answers     []Answer   `json:"answers,omitempty" gorm:"foreignKey:SubmissionID"`
 }
 
@@ -118,18 +117,12 @@ type Answer struct {
 type SubmissionStats struct {
     TotalSubmissions     int64                       `json:"totalSubmissions"`
     SubmissionsByStatus  []StatusCount               `json:"submissionsByStatus"`
-    SubmissionsByUser    []UserCount                 `json:"submissionsByUser"`
     AnswersByQuestion    []QuestionAnswerDistribution `json:"answersByQuestion"`
 }
 
 type StatusCount struct {
     Status string `json:"status"`
     Count  int64  `json:"count"`
-}
-
-type UserCount struct {
-    UserID uint  `json:"userId"`
-    Count  int64 `json:"count"`
 }
 
 type QuestionAnswerDistribution struct {
