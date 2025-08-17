@@ -62,6 +62,7 @@ func SetupRoutes(router *gin.Engine) {
 		admin.POST("/questions", handlers.CreateQuestion)
 		admin.PUT("/questions/:id", handlers.UpdateQuestion)
 		admin.DELETE("/questions/:id", handlers.DeleteQuestion)
+		admin.PATCH("/questions/reorder", handlers.ReorderQuestions)
 
 		// FORMULARIO: Opciones de pregunta
 		admin.POST("/questions/:questionId/options", handlers.CreateQuestionOption)

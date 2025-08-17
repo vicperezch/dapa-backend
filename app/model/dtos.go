@@ -84,6 +84,11 @@ type UpdateQuestionRequest struct {
 	Options     []QuestionOptionRequest `json:"options,omitempty"`
 }
 
+type ReorderQuestionRequest struct {
+	SourceID uint `json:"sourceId" binding:"required"` // pregunta arrastrada
+	TargetID uint `json:"targetId" binding:"required"` // pregunta en la posición destino
+}
+
 type AnswerRequest struct {
 	QuestionID *uint   `json:"questionId,omitempty"`
 	Answer     *string `json:"answer,omitempty"`

@@ -290,7 +290,67 @@ func UpdateQuestion(c *gin.Context) {
 	utils.RespondWithJSON(c, response)
 }
 
-// Eliminar pregunta (soft delete)
+// Reordenar preguntas (intercambiar posiciones)
+func ReorderQuestions(c *gin.Context) {
+	var req model.ReorderQuestionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
+		return
+	}
+
+	var source, target model.Question
+
+	// Buscar las preguntas involucradas
+	if err := database.DB.First(&source, req.SourceID).Error; err != nil {
+		utils.RespondWithError(c, "Pregunta origen no encontrada", http.StatusNotFound)
+		return
+	}
+	if err := database.DB.First(&target, req.TargetID).Error; err != nil {
+		utils.RespondWithError(c, "Pregunta destino no encontrada", http.StatusNotFound)
+		return
+	}
+
+	// Intercambiar posiciones dentro de una transacción
+	tx := database.DB.Begin()
+	if tx.Error != nil {
+		utils.RespondWithError(c, "Error iniciando transacción", http.StatusInternalServerError)
+		return
+	}
+
+	sourcePos := source.Position
+	targetPos := target.Position
+
+	if err := tx.Model(&source).Update("position", targetPos).Error; err != nil {
+		tx.Rollback()
+		utils.RespondWithError(c, "Error actualizando posición origen", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Model(&target).Update("position", sourcePos).Error; err != nil {
+		tx.Rollback()
+		utils.RespondWithError(c, "Error actualizando posición destino", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		utils.RespondWithError(c, "Error confirmando cambios", http.StatusInternalServerError)
+		return
+	}
+
+	utils.RespondWithJSON(c, model.ApiResponse{
+		Success: true,
+		Message: "Preguntas reordenadas correctamente",
+		Data: map[string]interface{}{
+			"source": source.ID,
+			"newPos": targetPos,
+			"target": target.ID,
+			"oldPos": targetPos,
+		},
+	})
+}
+
+
+// Eliminar pregunta
 func DeleteQuestion(c *gin.Context) {
 	id := c.Param("id")
 
