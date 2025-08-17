@@ -2,6 +2,7 @@ package model
 
 import (
 	"time"
+	"gorm.io/gorm"
 )
 
 type FormStatus string
@@ -80,8 +81,10 @@ type Question struct {
 	Description *string          `json:"description,omitempty" gorm:"size:255" validate:"omitempty,question_desc"`
 	TypeID      uint             `json:"typeId" gorm:"not null" validate:"required,gt=0"`
 	IsActive    bool             `json:"isActive" gorm:"not null;default:true"`
+	Position    int              `json:"position" gorm:"not null;default:1"`
 	Type        QuestionType     `json:"type" gorm:"foreignKey:TypeID"`
 	Options     []QuestionOption `json:"options,omitempty" gorm:"foreignKey:QuestionID"`
+	DeletedAt   gorm.DeletedAt   `json:"deletedAt,omitempty" gorm:"index"`
 }
 
 

@@ -48,28 +48,54 @@ func CreateQuestion(c *gin.Context) {
 		utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
 		return
 	}
+
+	// Obtener la posición máxima actual
+	var maxPos int
+	database.DB.Model(&model.Question{}).Select("COALESCE(MAX(position), 0)").Scan(&maxPos)
+
 	q := model.Question{
 		Question:    req.Question,
 		Description: req.Description,
 		TypeID:      req.TypeID,
 		IsActive:    req.IsActive == nil || *req.IsActive,
+		Position:    maxPos + 1, // nueva pregunta al final
 	}
+
 	if err := database.DB.Create(&q).Error; err != nil {
 		utils.RespondWithError(c, "Error al crear pregunta", http.StatusInternalServerError)
 		return
 	}
+
 	// Crear opciones si existen
-	for _, opt := range req.Options {
-		option := model.QuestionOption{QuestionID: q.ID, Option: opt.Option}
-		database.DB.Create(&option)
+	if len(req.Options) > 0 {
+		var options []model.QuestionOption
+		for _, opt := range req.Options {
+			options = append(options, model.QuestionOption{
+				QuestionID: q.ID,
+				Option:     opt.Option,
+			})
+		}
+		if err := database.DB.Create(&options).Error; err != nil {
+			utils.RespondWithError(c, "Error al crear opciones", http.StatusInternalServerError)
+			return
+		}
 	}
-	utils.RespondWithJSON(c, model.ApiResponse{Success: true, Data: q})
+
+	utils.RespondWithJSON(c, model.ApiResponse{
+		Success: true,
+		Message: "Pregunta creada correctamente",
+		Data:    q,
+	})
 }
 
 // Listar preguntas
 func GetQuestions(c *gin.Context) {
 	var questions []model.Question
-	if err := database.DB.Preload("Options").Preload("Type").Find(&questions).Error; err != nil {
+	if err := database.DB.
+		Preload("Options").
+		Preload("Type").
+		Order("position ASC").
+		Find(&questions).Error; err != nil {
 		utils.RespondWithError(c, "Error al obtener preguntas", http.StatusInternalServerError)
 		return
 	}
@@ -78,8 +104,13 @@ func GetQuestions(c *gin.Context) {
 
 func GetActiveQuestions(c *gin.Context) {
 	var activeQuestions []model.Question
-	if err := database.DB.Preload("Options").Preload("Type").Find(&activeQuestions).Where("is_active = false").Error; err != nil {
-		utils.RespondWithError(c, "Error al obtener preguntas", http.StatusInternalServerError)
+	if err := database.DB.
+		Preload("Options").
+		Preload("Type").
+		Where("is_active = ?", true).
+		Order("position ASC").
+		Find(&activeQuestions).Error; err != nil {
+		utils.RespondWithError(c, "Error al obtener preguntas activas", http.StatusInternalServerError)
 		return
 	}
 	utils.RespondWithJSON(c, activeQuestions)
@@ -89,7 +120,10 @@ func GetActiveQuestions(c *gin.Context) {
 func GetQuestionByID(c *gin.Context) {
 	id := c.Param("id")
 	var question model.Question
-	if err := database.DB.Preload("Options").Preload("Type").First(&question, id).Error; err != nil {
+	if err := database.DB.
+		Preload("Options").
+		Preload("Type").
+		First(&question, id).Error; err != nil {
 		utils.RespondWithError(c, "Pregunta no encontrada", http.StatusNotFound)
 		return
 	}
@@ -259,12 +293,16 @@ func UpdateQuestion(c *gin.Context) {
 // Eliminar pregunta (soft delete)
 func DeleteQuestion(c *gin.Context) {
 	id := c.Param("id")
-	if err := database.DB.Model(&model.Question{}).
-		Delete("id = ?", id).Error; err != nil {
+
+	if err := database.DB.Delete(&model.Question{}, id).Error; err != nil {
 		utils.RespondWithError(c, "Error al eliminar pregunta", http.StatusInternalServerError)
 		return
 	}
-	utils.RespondWithJSON(c, model.ApiResponse{Success: true, Message: "Pregunta eliminada"})
+
+	utils.RespondWithJSON(c, model.ApiResponse{
+		Success: true,
+		Message: "Pregunta eliminada",
+	})
 }
 
 // ---------- OPCIONES DE PREGUNTA ----------
