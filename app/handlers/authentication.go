@@ -30,7 +30,7 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	var req model.RegisterRequest
+	var req model.RegisterDTO
 	var err error
 
 	if err = c.ShouldBindJSON(&req); err != nil {
@@ -89,7 +89,7 @@ func RegisterHandler(c *gin.Context) {
 // @Failure      500 {object} model.ApiResponse "Internal server error"
 // @Router       /login/ [post]
 func LoginHandler(c *gin.Context) {
-	var req model.LoginRequest
+	var req model.LoginDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, "Invalid request", http.StatusBadRequest)
 		return

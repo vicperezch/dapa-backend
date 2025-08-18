@@ -87,7 +87,7 @@ func UpdateVehicle(c *gin.Context) {
 		return
 	}
 
-	var req model.UpdateVehicleRequest
+	var req model.VehicleDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
 		return
@@ -106,7 +106,7 @@ func UpdateVehicle(c *gin.Context) {
 		Model:          req.Model,
 		LicensePlate:   req.LicensePlate,
 		CapacityKg:     req.CapacityKg,
-		Available:      req.Available,
+		IsAvailable:    req.IsAvailable,
 		InsuranceDate:  req.InsuranceDate,
 		IsActive:       true,
 		CreatedAt:      vehicle.CreatedAt,
@@ -135,7 +135,7 @@ func UpdateVehicle(c *gin.Context) {
 // @Failure		500	{object} model.ApiResponse "Error creating new vehicle"
 // @Router		/vehicles/ [post]
 func CreateVehicle(c *gin.Context) {
-	var req model.CreateVehicleRequest
+	var req model.VehicleDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
 		return
@@ -146,7 +146,7 @@ func CreateVehicle(c *gin.Context) {
 		Model:         req.Model,
 		LicensePlate:  req.LicensePlate,
 		CapacityKg:    req.CapacityKg,
-		Available:     req.Available,
+		IsAvailable:   req.IsAvailable,
 		InsuranceDate: req.InsuranceDate,
 	}
 
