@@ -43,6 +43,20 @@ type Vehicle struct {
 	IsActive       bool       `json:"isActive" gorm:"column:is_active;default:true"`
 }
 
+type Order struct {
+	ID           uint      `json:"id" gorm:"primaryKey"`
+	SubmissionID uint      `json:"submissionId" gorm:"column:submission_id;not null;unique"`
+	UserID       uint      `json:"userId,omitempty" gorm:"column:user_id"`
+	VehicleID    uint      `json:"vehicleId,omitempty" gorm:"column:vehicle_id"`
+	Origin       string    `json:"origin" gorm:"size:100;not null"`
+	Destination  string    `json:"destination" gorm:"size:100;not null"`
+	TotalAmount  float64   `json:"totalAmount" gorm:"column:total_amount;not null"`
+	Details      *string   `json:"details,omitempty"`
+	Status       string    `json:"status" gorm:"not null"`
+	Type         string    `json:"type" gorm:"not null"`
+	Date         time.Time `json:"date" gorm:"not null"`
+}
+
 // ******************** FORMULARIO ********************
 // Tipos de preguntas disponibles
 type QuestionType struct {

@@ -44,10 +44,19 @@ type VehicleDTO struct {
 	InsuranceDate time.Time `json:"insuranceDate" binding:"required"`
 }
 
-type AssignQuote struct {
-	Driver  uint   `json:"driverId" binding:"required"`
-	Vehicle uint   `json:"vehicleId" binding:"required"`
-	Details string `json:"details"`
+type OrderDTO struct {
+	UserID      *uint   `json:"userId"`
+	VehicleID   *uint   `json:"vehicleId"`
+	Origin      string  `json:"origin" binding:"required"`
+	Destination string  `json:"destination" binding:"required"`
+	TotalAmount float64 `json:"totalAmount" binding:"required"`
+	Details     *string `json:"details"`
+	Type        string  `json:"type" binding:"requried"`
+}
+
+type AssignOrderDTO struct {
+	UserID    uint `json:"userId" binding:"required"`
+	VehicleID uint `json:"vehicleId" binding:"required"`
 }
 
 type CreateQuestionTypeRequest struct {
