@@ -408,41 +408,63 @@ func CreateQuestionOption(c *gin.Context) {
 
 // ---------- ENVÍOS DE FORMULARIO ----------
 
-// Crear envío
+// Crear envio
 func CreateSubmission(c *gin.Context) {
-	var req model.CreateSubmissionRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
-		return
-	}
-	sub := model.Submission{
-		SubmittedAt: time.Now(),
-		Status:      model.FormStatusPending,
-	}
-	if err := database.DB.Create(&sub).Error; err != nil {
-		utils.RespondWithError(c, "Error al crear envío", http.StatusInternalServerError)
-		return
-	}
-	// Guardar respuestas
-	for _, ans := range req.Answers {
-		answer := model.Answer{
-			SubmissionID: sub.ID,
-			QuestionID:   ans.QuestionID,
-			Answer:       ans.Answer,
-			OptionID:     ans.OptionID,
-		}
-		database.DB.Create(&answer)
-	}
-	utils.RespondWithJSON(c, model.ApiResponse{Success: true, Data: sub})
+    var req model.CreateSubmissionRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
+        return
+    }
+
+    submission := model.Submission{
+        SubmittedAt: time.Now(),
+        Status:      "pending",
+    }
+
+    // Preparar las respuestas
+    var answers []model.Answer
+    for _, ans := range req.Answers {
+        answer := model.Answer{
+            QuestionID: ans.QuestionID,
+        }
+
+        if ans.Answer != nil {
+            answer.Answer = ans.Answer
+        }
+
+        if len(ans.OptionsID) > 0 {
+            var options []model.QuestionOption
+            if err := database.DB.Where("id IN ?", ans.OptionsID).Find(&options).Error; err != nil {
+                utils.RespondWithError(c, "Error al encontrar las opciones", http.StatusInternalServerError)
+                return
+            }
+            answer.Options = options
+        }
+
+        answers = append(answers, answer)
+    }
+
+    submission.Answers = answers
+
+    if err := database.DB.Create(&submission).Error; err != nil {
+        utils.RespondWithError(c, "Error al crear la submission", http.StatusInternalServerError)
+        return
+    }
+
+    utils.RespondWithJSON(c, submission)
 }
 
 // Listar envíos
 func GetSubmissions(c *gin.Context) {
 	var submissions []model.Submission
-	if err := database.DB.Preload("Answers").Preload("User").Find(&submissions).Error; err != nil {
+	if err := database.DB.
+		Preload("Answers").
+		Preload("Answers.Options.Option").
+		Find(&submissions).Error; err != nil {
 		utils.RespondWithError(c, "Error al obtener envíos", http.StatusInternalServerError)
 		return
 	}
+
 	utils.RespondWithJSON(c, submissions)
 }
 

@@ -106,14 +106,14 @@ type Submission struct {
 
 // Respuesta a una pregunta
 type Answer struct {
-	ID           uint            `json:"id" gorm:"primaryKey"`
-	SubmissionID uint            `json:"submissionId" gorm:"not null" validate:"required,gt=0"`
-	QuestionID   *uint           `json:"questionId,omitempty" validate:"omitempty,gt=0"`
-	Answer       *string         `json:"answer,omitempty" validate:"omitempty,max=255"`
-	OptionID     *uint           `json:"optionId,omitempty" validate:"omitempty,gt=0"`
-	Question     *Question       `json:"question,omitempty" gorm:"foreignKey:QuestionID"`
-	Option       *QuestionOption `json:"option,omitempty" gorm:"foreignKey:OptionID"`
+	ID           uint             `json:"id" gorm:"primaryKey"`
+	SubmissionID uint             `json:"submissionId" gorm:"not null" validate:"required,gt=0"`
+	QuestionID   uint             `json:"questionId,omitempty" validate:"omitempty,gt=0"`
+	Answer       *string          `json:"answer,omitempty" validate:"omitempty,max=255"`
+	Question     Question         `json:"question,omitempty" gorm:"foreignKey:QuestionID"`
+	Options      []QuestionOption `json:"options,omitempty" gorm:"many2many:answer_options;"`
 }
+
 type SubmissionStats struct {
     TotalSubmissions     int64                       `json:"totalSubmissions"`
     SubmissionsByStatus  []StatusCount               `json:"submissionsByStatus"`

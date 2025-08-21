@@ -90,9 +90,9 @@ type ReorderQuestionRequest struct {
 }
 
 type AnswerRequest struct {
-	QuestionID *uint   `json:"questionId,omitempty"`
-	Answer     *string `json:"answer,omitempty"`
-	OptionID   *uint   `json:"optionId,omitempty"`
+	QuestionID  uint       `json:"questionId,omitempty"`
+	Answer      *string    `json:"answer,omitempty"`
+	OptionsID   []uint     `json:"optionsId,omitempty"`
 }
 
 type CreateSubmissionRequest struct {
