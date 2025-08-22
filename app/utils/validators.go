@@ -1,17 +1,11 @@
 package utils
 
 import (
+	"regexp"
 	"unicode/utf8"
 
 	"github.com/go-playground/validator/v10"
 )
-
-// RoleValidator checks if the role string is valid.
-// Valid roles are "admin" or "driver".
-var RoleValidator validator.Func = func(fl validator.FieldLevel) bool {
-	role := fl.Field().String()
-	return role == "admin" || role == "driver"
-}
 
 // PasswordValidator validates the password field.
 // The password must be at least 8 characters long.
@@ -25,6 +19,13 @@ var PasswordValidator validator.Func = func(fl validator.FieldLevel) bool {
 var PhoneValidator validator.Func = func(fl validator.FieldLevel) bool {
 	phone := fl.Field().String()
 	return IsAllDigits(phone)
+}
+
+// Compara la placa con el formato estándar en Guatemala
+var LicensePlateValidator validator.Func = func(fl validator.FieldLevel) bool {
+	plate := fl.Field().String()
+	re := regexp.MustCompile(`^[A-Za-z]\d{3}[A-Z]{3}$`)
+	return re.MatchString(plate)
 }
 
 // QuestionTextValidator checks that question text is not empty and max 50 characters.
@@ -59,3 +60,4 @@ var SubmissionStatusValidator validator.Func = func(fl validator.FieldLevel) boo
 	status := fl.Field().String()
 	return status == "pending" || status == "approved" || status == "rejected"
 }
+

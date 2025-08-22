@@ -21,11 +21,12 @@ func GetTagMessage(tag string) string {
 	case "password":
 		return "Password must be at least 8 characters long"
 
-	case "validrole":
-		return "A valid role must be provided"
-
 	case "email":
 		return "Invalid email address"
+
+	case "plate":
+		return "Invalid license plate format"
 	}
-	return ""
+
+	return "Invalid request format"
 }

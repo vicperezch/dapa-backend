@@ -12,9 +12,9 @@ type RegisterDTO struct {
 	LastName              string    `json:"lastName" binding:"required"`
 	Phone                 string    `json:"phone" binding:"required,phone"`
 	Email                 string    `json:"email" binding:"required,email"`
-	LicenseExpirationDate time.Time `json:"licenseExpirationDate"`
+	LicenseExpirationDate time.Time `json:"licenseExpirationDate" binding:"required_if=Role driver"`
 	Password              string    `json:"password" binding:"required,password"`
-	Role                  string    `json:"role" binding:"required,validrole"`
+	Role                  string    `json:"role" binding:"required,oneof=admin driver"`
 }
 
 type PasswordResetRequest struct {
@@ -29,17 +29,17 @@ type NewPasswordRequest struct {
 type UserDTO struct {
 	Name                  string    `json:"name" binding:"required"`
 	LastName              string    `json:"lastName" binding:"required"`
-	Phone                 string    `json:"phone" binding:"required"`
+	Phone                 string    `json:"phone" binding:"required,phone"`
 	Email                 string    `json:"email" binding:"required,email"`
-	Role                  string    `json:"role" binding:"required,validrole"`
+	Role                  string    `json:"role" binding:"required,oneof=admin driver"`
 	LicenseExpirationDate time.Time `json:"licenseExpirationDate"`
 }
 
 type VehicleDTO struct {
 	Brand         string    `json:"brand" binding:"required"`
 	Model         string    `json:"model" binding:"required"`
-	LicensePlate  string    `json:"licensePlate" binding:"required"`
-	CapacityKg    float64   `json:"capacityKg" binding:"required"`
+	LicensePlate  string    `json:"licensePlate" binding:"required,plate"`
+	CapacityKg    float64   `json:"capacityKg" binding:"required,gt=0"`
 	IsAvailable   bool      `json:"isAvailable" binding:"required"`
 	InsuranceDate time.Time `json:"insuranceDate" binding:"required"`
 }
