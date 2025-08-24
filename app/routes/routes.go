@@ -71,6 +71,7 @@ func SetupRoutes(router *gin.Engine) {
 		// FORMULARIO: Envíos (admin puede ver y actualizar estado)
 		admin.GET("/submissions", handlers.GetSubmissions)
 		admin.POST("/submissions", handlers.CreateSubmission)
+		admin.GET("/submissions/:id", handlers.GetSubmissionByID)
 		admin.GET("/submissions-stats", handlers.GetSubmissionStats)
 		admin.PUT("/submissions/:id/status", handlers.UpdateSubmissionStatus)
 	}

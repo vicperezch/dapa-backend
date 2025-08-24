@@ -468,6 +468,22 @@ func GetSubmissions(c *gin.Context) {
 	utils.RespondWithJSON(c, submissions)
 }
 
+// GetSubmissionByID obtiene una submission con sus respuestas, preguntas y opciones asociadas
+func GetSubmissionByID(c *gin.Context) {
+    id := c.Param("id")
+
+    var submission model.Submission
+    if err := database.DB.
+        Preload("Answers.Question.Options").
+        Preload("Answers.Option").
+        First(&submission, "id = ?", id).Error; err != nil {
+        utils.RespondWithError(c, "Error al obtener el envío", http.StatusInternalServerError)
+        return
+    }
+
+    utils.RespondWithJSON(c, submission)
+}
+
 //Obtener estadisticas de las submissions
 func GetSubmissionStats(c *gin.Context) {
     var stats model.SubmissionStats
