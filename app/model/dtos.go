@@ -12,11 +12,11 @@ type RegisterRequest struct {
 	Role                  string    `json:"role" binding:"required,validrole"`
 }
 
-type PasswordResetRequest struct {
+type ForgotPasswordDTO struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
-type NewPasswordRequest struct {
+type ResetPasswordDTO struct {
 	Token       string `json:"token" binding:"required"`
 	NewPassword string `json:"newPassword" binding:"required,password"`
 }
@@ -100,12 +100,12 @@ type UpdateSubmissionStatusRequest struct {
 }
 
 type QuestionResponse struct {
-	ID          uint                   `json:"id"`
-	Question    string                 `json:"question"`
-	Description *string                `json:"description,omitempty"`
-	TypeID      uint                   `json:"typeId"`
-	Type        string                 `json:"type"`
-	IsActive    bool                   `json:"isActive"`
+	ID          uint                     `json:"id"`
+	Question    string                   `json:"question"`
+	Description *string                  `json:"description,omitempty"`
+	TypeID      uint                     `json:"typeId"`
+	Type        string                   `json:"type"`
+	IsActive    bool                     `json:"isActive"`
 	Options     []QuestionOptionResponse `json:"options,omitempty"`
 }
 
@@ -125,28 +125,27 @@ type SubmissionResponse struct {
 }
 
 type AnswerResponse struct {
-	ID           uint    `json:"id"`
-	QuestionID   *uint   `json:"questionId,omitempty"`
-	Question     *string `json:"question,omitempty"`
-	Answer       *string `json:"answer,omitempty"`
-	OptionID     *uint   `json:"optionId,omitempty"`
-	OptionText   *string `json:"optionText,omitempty"`
+	ID         uint    `json:"id"`
+	QuestionID *uint   `json:"questionId,omitempty"`
+	Question   *string `json:"question,omitempty"`
+	Answer     *string `json:"answer,omitempty"`
+	OptionID   *uint   `json:"optionId,omitempty"`
+	OptionText *string `json:"optionText,omitempty"`
 }
 
 type QuestionFilters struct {
-	TypeID   *uint  `form:"typeId"`
-	IsActive *bool  `form:"isActive"`
-	Page     int    `form:"page,default=1" binding:"min=1"`
-	Limit    int    `form:"limit,default=10" binding:"min=1,max=100"`
+	TypeID   *uint `form:"typeId"`
+	IsActive *bool `form:"isActive"`
+	Page     int   `form:"page,default=1" binding:"min=1"`
+	Limit    int   `form:"limit,default=10" binding:"min=1,max=100"`
 }
 
 type SubmissionFilters struct {
-	UserID *uint      `form:"userId"`
+	UserID *uint       `form:"userId"`
 	Status *FormStatus `form:"status" binding:"omitempty,oneof=pending cancelled approved"`
-	Page   int        `form:"page,default=1" binding:"min=1"`
-	Limit  int        `form:"limit,default=10" binding:"min=1,max=100"`
+	Page   int         `form:"page,default=1" binding:"min=1"`
+	Limit  int         `form:"limit,default=10" binding:"min=1,max=100"`
 }
-
 
 type ApiResponse struct {
 	Success bool   `json:"success,omitempty"`

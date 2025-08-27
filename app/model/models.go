@@ -41,6 +41,14 @@ type Vehicle struct {
 	IsActive       bool       `json:"isActive" gorm:"column:is_active;default:true"`
 }
 
+type ResetToken struct {
+	ID     uint      `gorm:"primaryKey"`
+	Token  string    `gorm:"size:255;not null"`
+	Expiry time.Time `gorm:"not null"`
+	IsUsed bool      `gorm:"not null"`
+	UserID uint      `gorm:"not null"`
+}
+
 type Quote struct {
 	ID           uint    `json:"id" gorm:"primaryKey"`
 	SubmissionID uint    `gorm:"column:submission_id"`
@@ -84,7 +92,6 @@ type Question struct {
 	Options     []QuestionOption `json:"options,omitempty" gorm:"foreignKey:QuestionID"`
 }
 
-
 // Opciones de una pregunta
 type QuestionOption struct {
 	ID         uint   `json:"id" gorm:"primaryKey"`
@@ -113,25 +120,24 @@ type Answer struct {
 	Option       *QuestionOption `json:"option,omitempty" gorm:"foreignKey:OptionID"`
 }
 type SubmissionStats struct {
-    TotalSubmissions     int64                       `json:"totalSubmissions"`
-    SubmissionsByStatus  []StatusCount               `json:"submissionsByStatus"`
-    SubmissionsByUser    []UserCount                 `json:"submissionsByUser"`
-    AnswersByQuestion    []QuestionAnswerDistribution `json:"answersByQuestion"`
+	TotalSubmissions    int64                        `json:"totalSubmissions"`
+	SubmissionsByStatus []StatusCount                `json:"submissionsByStatus"`
+	SubmissionsByUser   []UserCount                  `json:"submissionsByUser"`
+	AnswersByQuestion   []QuestionAnswerDistribution `json:"answersByQuestion"`
 }
 
 type StatusCount struct {
-    Status string `json:"status"`
-    Count  int64  `json:"count"`
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
 }
 
 type UserCount struct {
-    UserID uint  `json:"userId"`
-    Count  int64 `json:"count"`
+	UserID uint  `json:"userId"`
+	Count  int64 `json:"count"`
 }
 
 type QuestionAnswerDistribution struct {
-    QuestionID uint  `json:"questionId"`
-    OptionID   uint  `json:"optionId"`
-    Count      int64 `json:"count"`
+	QuestionID uint  `json:"questionId"`
+	OptionID   uint  `json:"optionId"`
+	Count      int64 `json:"count"`
 }
-
