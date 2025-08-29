@@ -9,15 +9,6 @@ import (
 
 // SetupRoutes configures all API routes and applies middleware for authentication and authorization.
 func SetupRoutes(router *gin.Engine) {
-
-	// Public routes - no authentication required
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Backend connected successfully!",
-		})
-	})
-
-	// Base API group
 	api := router.Group("/api")
 
 	// Public authentication route
@@ -31,26 +22,29 @@ func SetupRoutes(router *gin.Engine) {
 	{
 		protected.PUT("/users/:id", handlers.UpdateUser)
 		protected.GET("/users/:id", handlers.GetUserById)
+
+		protected.GET("/orders", handlers.GetOrders)
 	}
 
-	// Admin-only routes group
 	admin := protected.Group("")
 	admin.Use(middlewares.RoleRequired("admin"))
 	{
-		// User management routes for admin
+		// ENTIDADES: Usuarios
 		admin.POST("/users", handlers.RegisterHandler)
 		admin.GET("/users", handlers.GetUsers)
 		admin.DELETE("/users/:id", handlers.DeleteUser)
 
-		// Vehicle management routes for admin
+		// ENTIDADES: Vehículos
 		admin.GET("/vehicles", handlers.GetVehicles)
 		admin.POST("/vehicles", handlers.CreateVehicle)
 		admin.GET("/vehicles/:id", handlers.GetVehicleById)
 		admin.PUT("/vehicles/:id", handlers.UpdateVehicle)
 		admin.DELETE("/vehicles/:id", handlers.DeleteVehicle)
 
-		admin.GET("/quotes", handlers.GetQuotes)
-		admin.POST("/quotes/:id", handlers.AssignQuoteInfo)
+		// ENTIDADES: Órdenes
+		admin.GET("/orders/:id", handlers.GetOrderById)
+		admin.PUT("/orders/:id", handlers.UpdateOrder)
+		admin.PATCH("/orders/:id", handlers.AssignOrder)
 
 		// FORMULARIO: Tipos de pregunta
 		admin.GET("/question-types", handlers.GetQuestionTypes)
@@ -75,12 +69,4 @@ func SetupRoutes(router *gin.Engine) {
 		admin.GET("/submissions-stats", handlers.GetSubmissionStats)
 		admin.PUT("/submissions/:id/status", handlers.UpdateSubmissionStatus)
 	}
-
-	// Driver-only routes group (currently empty, placeholder for future driver endpoints)
-	driver := protected.Group("")
-	driver.Use(middlewares.RoleRequired("driver"))
-	{
-		// Add driver-specific routes here
-	}
 }
-

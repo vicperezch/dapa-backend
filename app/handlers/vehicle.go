@@ -4,10 +4,12 @@ import (
 	"dapa/app/model"
 	"dapa/app/utils"
 	"dapa/database"
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 // @Summary		Get all vehicles
@@ -87,7 +89,7 @@ func UpdateVehicle(c *gin.Context) {
 		return
 	}
 
-	var req model.UpdateVehicleRequest
+	var req model.VehicleDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
 		return
@@ -106,7 +108,7 @@ func UpdateVehicle(c *gin.Context) {
 		Model:          req.Model,
 		LicensePlate:   req.LicensePlate,
 		CapacityKg:     req.CapacityKg,
-		Available:      req.Available,
+		IsAvailable:    req.IsAvailable,
 		InsuranceDate:  req.InsuranceDate,
 		IsActive:       true,
 		CreatedAt:      vehicle.CreatedAt,
@@ -135,9 +137,21 @@ func UpdateVehicle(c *gin.Context) {
 // @Failure		500	{object} model.ApiResponse "Error creating new vehicle"
 // @Router		/vehicles/ [post]
 func CreateVehicle(c *gin.Context) {
-	var req model.CreateVehicleRequest
+	var req model.VehicleDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			errorMessages := make([]string, len(ve))
+
+			for i, fe := range ve {
+				errorMessages[i] = utils.GetTagMessage(fe.Tag())
+			}
+
+			utils.RespondWithError(c, errorMessages[0], http.StatusBadRequest)
+			return
+		}
+
+		utils.RespondWithError(c, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -146,7 +160,7 @@ func CreateVehicle(c *gin.Context) {
 		Model:         req.Model,
 		LicensePlate:  req.LicensePlate,
 		CapacityKg:    req.CapacityKg,
-		Available:     req.Available,
+		IsAvailable:   req.IsAvailable,
 		InsuranceDate: req.InsuranceDate,
 	}
 

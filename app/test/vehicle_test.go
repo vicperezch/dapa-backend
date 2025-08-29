@@ -75,12 +75,12 @@ func TestCreateVehicle_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	setupVehicleTestContext()
 
-	vehicle := model.CreateVehicleRequest{
+	vehicle := model.VehicleDTO{
 		Brand:         "Ford",
 		Model:         "Transit",
 		LicensePlate:  "XYZ-123",
 		CapacityKg:    1000,
-		Available:     true,
+		IsAvailable:   true,
 		InsuranceDate: time.Now(),
 	}
 

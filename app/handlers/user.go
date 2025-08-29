@@ -82,7 +82,7 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var req model.UpdateUserRequest
+	var req model.UserDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
 		return

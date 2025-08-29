@@ -38,9 +38,9 @@ func main() {
 
 	// Register custom validators for request binding
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation("validrole", utils.RoleValidator)
 		v.RegisterValidation("password", utils.PasswordValidator)
 		v.RegisterValidation("phone", utils.PhoneValidator)
+		v.RegisterValidation("plate", utils.LicensePlateValidator)
 		v.RegisterValidation("question_text", utils.QuestionTextValidator)
 		v.RegisterValidation("question_desc", utils.QuestionDescriptionValidator)
 		v.RegisterValidation("question_type", utils.QuestionTypeValidator)
@@ -95,7 +95,7 @@ func CreateFirstAdmin() error {
 	return db.Create(&admin).Error
 }
 
-//Seed question types adds the four common types of questions
+// Seed question types adds the four common types of questions
 func SeedQuestionTypes() {
     questionTypes := []string{"text", "multiple", "unique", "dropdown", "area"}
     
