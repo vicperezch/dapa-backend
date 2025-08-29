@@ -457,9 +457,13 @@ func CreateSubmission(c *gin.Context) {
 // Listar envíos
 func GetSubmissions(c *gin.Context) {
 	var submissions []model.Submission
+
 	if err := database.DB.
 		Preload("Answers").
-		Preload("Answers.Options.Option").
+		Preload("Answers.Question").
+		Preload("Answers.Question.Type").
+		Preload("Answers.Question.Options").
+		Preload("Answers.Options").
 		Find(&submissions).Error; err != nil {
 		utils.RespondWithError(c, "Error al obtener envíos", http.StatusInternalServerError)
 		return
@@ -468,20 +472,24 @@ func GetSubmissions(c *gin.Context) {
 	utils.RespondWithJSON(c, submissions)
 }
 
+
 // GetSubmissionByID obtiene una submission con sus respuestas, preguntas y opciones asociadas
 func GetSubmissionByID(c *gin.Context) {
-    id := c.Param("id")
+	id := c.Param("id")
 
-    var submission model.Submission
-    if err := database.DB.
-        Preload("Answers.Question.Options").
-        Preload("Answers.Option").
-        First(&submission, "id = ?", id).Error; err != nil {
-        utils.RespondWithError(c, "Error al obtener el envío", http.StatusInternalServerError)
-        return
-    }
+	var submission model.Submission
+	if err := database.DB.
+		Preload("Answers").
+		Preload("Answers.Question").
+		Preload("Answers.Question.Type").
+		Preload("Answers.Question.Options").
+		Preload("Answers.Options").
+		First(&submission, "id = ?", id).Error; err != nil {
+		utils.RespondWithError(c, "Error al obtener el envío", http.StatusInternalServerError)
+		return
+	}
 
-    utils.RespondWithJSON(c, submission)
+	utils.RespondWithJSON(c, submission)
 }
 
 //Obtener estadisticas de las submissions
