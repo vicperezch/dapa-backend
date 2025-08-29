@@ -97,7 +97,7 @@ func CreateFirstAdmin() error {
 
 //Seed question types adds the four common types of questions
 func SeedQuestionTypes() {
-    questionTypes := []string{"text", "multiple", "unique", "dropdown"}
+    questionTypes := []string{"text", "multiple", "unique", "dropdown", "area"}
     
     for _, typeName := range questionTypes {
         var existingType model.QuestionType
