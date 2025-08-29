@@ -151,6 +151,7 @@ func ForgotPasswordHandler(c *gin.Context) {
 
 	err = database.DB.Where("email = ? AND is_active = ?", req.Email, true).First(&user).Error
 	if err != nil {
+		println(err.Error())
 		utils.RespondWithError(c, "Could not generate token", http.StatusInternalServerError)
 		return
 	}
@@ -177,7 +178,7 @@ func ForgotPasswordHandler(c *gin.Context) {
 		return
 	}
 
-	link := "https:://localhost:5173/reset?token=" + token
+	link := "http://localhost:5173/reset-password?token=" + token
 	emailContent := fmt.Sprintf("<p>Puedes actualizar tu contraseña a través del siguiente link:</p><a href=\"%s\">%s</a>", link, link)
 
 	err = utils.SendEmail(user.Email, "Reestablecimiento de contraseña", emailContent)
