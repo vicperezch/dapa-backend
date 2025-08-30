@@ -1,14 +1,19 @@
 package handlers
 
 import (
+	"crypto/sha256"
 	"dapa/app/model"
 	"dapa/app/utils"
 	"dapa/database"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"gorm.io/gorm"
 )
 
 // @Summary      Register a new employee
@@ -124,26 +129,103 @@ func LoginHandler(c *gin.Context) {
 	})
 }
 
-func ResetLinkHandler(c *gin.Context) {
-	var req model.PasswordResetRequest
+// @Summary      Reset password request
+// @Description  Initiates the process to reset an account's password with a link sent via email
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        data body model.ForgotPasswordDTO true "User email"
+// @Success      200 {object} model.ApiResponse "Email sent successfully"
+// @Failure      400 {object} model.ApiResponse "Invalid request format"
+// @Failure      500 {object} model.ApiResponse "Internal server error"
+// @Router       /auth/forgot [post]
+func ForgotPasswordHandler(c *gin.Context) {
+	var req model.ForgotPasswordDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	// token := utils.GenerateResetToken(req.Email, getPasswordHash(req.Email))
-	// TODO: send token via email
+	var err error
+	var user model.User
+
+	err = database.DB.Where("email = ? AND is_active = ?", req.Email, true).First(&user).Error
+	if err != nil {
+		println(err.Error())
+		utils.RespondWithError(c, "Could not generate token", http.StatusInternalServerError)
+		return
+	}
+
+	token, err := utils.GenerateResetToken(32)
+	if err != nil {
+		utils.RespondWithError(c, "Could not generate token", http.StatusInternalServerError)
+		return
+	}
+
+	// Hashear el token y almacenar en la base de datos
+	hash := sha256.Sum256([]byte(token))
+	expiry := time.Now().Add(30 * time.Minute)
+	resetToken := model.ResetToken{
+		Token:  hex.EncodeToString(hash[:]),
+		Expiry: expiry,
+		UserID: user.ID,
+		IsUsed: false,
+	}
+
+	err = database.DB.Create(&resetToken).Error
+	if err != nil {
+		utils.RespondWithError(c, "Could not generate token", http.StatusInternalServerError)
+		return
+	}
+
+	link := "http://localhost:5173/reset-password?token=" + token
+	emailContent := fmt.Sprintf("<p>Puedes actualizar tu contraseña a través del siguiente link:</p><a href=\"%s\">%s</a>", link, link)
+
+	err = utils.SendEmail(user.Email, "Reestablecimiento de contraseña", emailContent)
+	if err != nil {
+		utils.RespondWithError(c, "Could not send email", http.StatusInternalServerError)
+		return
+	}
+
+	utils.RespondWithJSON(c, model.ApiResponse{
+		Success: true,
+		Message: "Email sent succesfully",
+	})
 }
 
-func PasswordResetHandler(c *gin.Context) {
-	var req model.NewPasswordRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+// @Summary      Changes an user's password
+// @Description  Uses a reset token to change the account's password
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        data body model.ResetPasswordDTO true "Reset data"
+// @Success      200 {object} model.ApiResponse "Password updated successfully"
+// @Failure      400 {object} model.ApiResponse "Invalid request format"
+// @Failure      401 {object} model.ApiResponse "Token verification failed"
+// @Failure      500 {object} model.ApiResponse "Internal server error"
+// @Router       /auth/forgot [post]
+func ResetPasswordHandler(c *gin.Context) {
+	var req model.ResetPasswordDTO
+	var err error
+
+	if err = c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	login, err := utils.VerifyResetToken(req.Token, getPasswordHash)
+	hash := sha256.Sum256([]byte(req.Token))
+
+	var resetToken model.ResetToken
+	var user model.User
+
+	err = database.DB.Where("token = ? AND is_used = ?", hex.EncodeToString(hash[:]), false).First(&resetToken).Error
 	if err != nil {
+		utils.RespondWithError(c, "Token verification failed", http.StatusUnauthorized)
+		return
+	}
+
+	err = database.DB.Where("id = ? AND is_active = ?", resetToken.UserID, true).First(&user).Error
+	if err != nil || time.Now().After(resetToken.Expiry) {
 		utils.RespondWithError(c, "Token verification failed", http.StatusUnauthorized)
 		return
 	}
@@ -154,26 +236,25 @@ func PasswordResetHandler(c *gin.Context) {
 		return
 	}
 
-	var user model.User
-	database.DB.Where("is_active = ? and email = ?", true, login).Scan(&user)
-
 	user.PasswordHash = paswordHash
-	database.DB.Save(&user)
+	resetToken.IsUsed = true
+
+	database.DB.Transaction(func(tx *gorm.DB) error {
+		err = tx.Save(&user).Error
+		if err != nil {
+			return err
+		}
+
+		err = tx.Save(&resetToken).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 
 	utils.RespondWithJSON(c, model.ApiResponse{
 		Success: true,
 		Message: "Password updated succesfully",
 	})
-}
-
-func getPasswordHash(email string) ([]byte, error) {
-	var hash []byte
-	database.DB.
-		Table("employees").
-		Select("employees.password").
-		Joins("left join users on users.id = employees.user_id").
-		Where("is_active = ? and users.email = ?", true, email).
-		Scan(&hash)
-
-	return hash, nil
 }

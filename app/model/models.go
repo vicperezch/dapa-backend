@@ -43,6 +43,38 @@ type Vehicle struct {
 	IsActive       bool       `json:"isActive" gorm:"column:is_active;default:true"`
 }
 
+type ResetToken struct {
+	ID     uint      `gorm:"primaryKey"`
+	Token  string    `gorm:"size:255;not null"`
+	Expiry time.Time `gorm:"not null"`
+	IsUsed bool      `gorm:"not null"`
+	UserID uint      `gorm:"not null"`
+}
+
+type Quote struct {
+	ID           uint    `json:"id" gorm:"primaryKey"`
+	SubmissionID uint    `gorm:"column:submission_id"`
+	DriverID     uint    `gorm:"column:driver_id"`
+	VehicleID    uint    `gorm:"column:vehicle_id"`
+	StateID      uint    `gorm:"column:state_id"`
+	ServiceType  uint    `gorm:"column:service_type"`
+	TotalAmount  float64 `gorm:"column:total_amount"`
+	Date         time.Time
+	Details      string
+}
+
+type QuoteView struct {
+	ID           uint      `json:"id" gorm:"primaryKey"`
+	Date         time.Time `json:"date"`
+	Client       string    `json:"clientName"`
+	VehicleBrand string    `json:"vehicleBrand" gorm:"column:vehicle_brand"`
+	VehicleModel string    `json:"vehicleModel" gorm:"column:vehicle_model"`
+	Driver       string    `json:"driver"`
+}
+
+func (QuoteView) TableName() string {
+	return "pending_orders"
+}
 type Order struct {
 	ID           uint      `json:"id" gorm:"primaryKey"`
 	SubmissionID uint      `json:"submissionId" gorm:"column:submission_id;not null;unique"`
@@ -112,6 +144,11 @@ type SubmissionStats struct {
 type StatusCount struct {
 	Status string `json:"status"`
 	Count  int64  `json:"count"`
+}
+
+type UserCount struct {
+	UserID uint  `json:"userId"`
+	Count  int64 `json:"count"`
 }
 
 type QuestionAnswerDistribution struct {

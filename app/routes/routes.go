@@ -13,6 +13,8 @@ func SetupRoutes(router *gin.Engine) {
 
 	// Public authentication route
 	api.POST("/login", handlers.LoginHandler)
+	api.POST("/auth/forgot", handlers.ForgotPasswordHandler)
+	api.POST("/auth/reset", handlers.ResetPasswordHandler)
 
 	// Protected routes - require valid JWT token
 	protected := api.Group("")

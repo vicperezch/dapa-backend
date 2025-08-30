@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"time"
+	"crypto/rand"
+	"encoding/base64"
 
-	"github.com/dchest/passwordreset"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -25,21 +25,12 @@ func CheckPassword(password string, hash string) bool {
 
 // Generates a new token to reset a users password
 // Returns the generated token
-func GenerateResetToken(email string, passwordHash string) string {
-	token := passwordreset.NewToken(email, time.Hour, []byte(passwordHash), resetSecret)
-
-	return token
-}
-
-// Checks if a token to reset a users password is valid
-// Returns the user that requested the reset
-func VerifyResetToken(token string, getPasswordHash func(string) ([]byte, error)) (string, error) {
-	login, err := passwordreset.VerifyToken(token, getPasswordHash, resetSecret)
-
+func GenerateResetToken(n int) (string, error) {
+	bytes := make([]byte, n)
+	_, err := rand.Read(bytes)
 	if err != nil {
 		return "", err
 	}
 
-	return login, nil
+	return base64.URLEncoding.EncodeToString(bytes), nil
 }
-

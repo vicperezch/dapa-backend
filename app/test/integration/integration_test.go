@@ -58,7 +58,6 @@ func setupRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-        v.RegisterValidation("validrole", utils.RoleValidator)
         v.RegisterValidation("password", utils.PasswordValidator)
         v.RegisterValidation("phone", utils.PhoneValidator)
         v.RegisterValidation("question_text", utils.QuestionTextValidator)
