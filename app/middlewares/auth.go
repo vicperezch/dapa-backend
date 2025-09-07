@@ -2,9 +2,9 @@ package middlewares
 
 import (
 	"net/http"
-	
-	"dapa/app/utils"
+
 	"dapa/app/model"
+	"dapa/app/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,14 +16,14 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := extractToken(c.Request)
 		if tokenString == "" {
-			utils.RespondWithError(c, "Authorization token required", http.StatusUnauthorized)
+			utils.RespondWithUnathorizedError(c)
 			c.Abort()
 			return
 		}
 
 		claims, err := utils.ValidateToken(tokenString)
 		if err != nil {
-			utils.RespondWithError(c, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+			utils.RespondWithUnathorizedError(c)
 			c.Abort()
 			return
 		}
@@ -39,14 +39,14 @@ func RoleRequired(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claimsInterface, exists := c.Get("claims")
 		if !exists {
-			utils.RespondWithError(c, "Claims not found", http.StatusUnauthorized)
+			utils.RespondWithUnathorizedError(c)
 			c.Abort()
 			return
 		}
 
 		claims, ok := claimsInterface.(*model.EmployeeClaims)
 		if !ok {
-			utils.RespondWithError(c, "Invalid claims format", http.StatusInternalServerError)
+			utils.RespondWithCustomError(c, http.StatusBadRequest, "Invalid claims format", "Invalid request format")
 			c.Abort()
 			return
 		}
@@ -60,7 +60,7 @@ func RoleRequired(roles ...string) gin.HandlerFunc {
 		}
 
 		if !hasRole {
-			utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+			utils.RespondWithUnathorizedError(c)
 			c.Abort()
 			return
 		}
@@ -78,3 +78,4 @@ func extractToken(r *http.Request) string {
 	}
 	return ""
 }
+

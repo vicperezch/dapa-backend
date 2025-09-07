@@ -6,13 +6,11 @@ import (
 	"dapa/app/utils"
 	"dapa/database"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 )
 
@@ -23,7 +21,7 @@ import (
 // @Produce      json
 // @Param        register body model.RegisterRequest true "Employee registration data"
 // @Success      200 {object} model.ApiResponse "Employee registered successfully"
-// @Failure      400 {object} model.ApiResponse "Invalid input data"
+// @Failure      400 {object} model.ApiResponse "Invalid request format"
 // @Failure      403 {object} model.ApiResponse "Insufficient permissions"
 // @Failure      500 {object} model.ApiResponse "Internal server error"
 // @Router       /users/ [post]
@@ -31,7 +29,7 @@ func RegisterHandler(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 
 	if claims.Role != "admin" {
-		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		utils.RespondWithUnathorizedError(c)
 		return
 	}
 
@@ -39,25 +37,13 @@ func RegisterHandler(c *gin.Context) {
 	var err error
 
 	if err = c.ShouldBindJSON(&req); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			errorMessages := make([]string, len(ve))
-
-			for i, fe := range ve {
-				errorMessages[i] = utils.GetTagMessage(fe.Tag())
-			}
-
-			utils.RespondWithError(c, errorMessages[0], http.StatusBadRequest)
-			return
-		}
-
-		utils.RespondWithError(c, err.Error(), http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
 
 	passwordHash, err := utils.HashPassword(req.Password)
 	if err != nil {
-		utils.RespondWithError(c, "Error hashing password", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Eror registering user")
 		return
 	}
 
@@ -72,14 +58,16 @@ func RegisterHandler(c *gin.Context) {
 	}
 
 	if err = database.DB.Create(&user).Error; err != nil {
-		utils.RespondWithError(c, "Error registrando al usuario", http.StatusInternalServerError)
+		utils.RespondWithCustomError(
+			c,
+			http.StatusInternalServerError,
+			"Error registering user",
+			"Something went wrong",
+		)
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "User created successfully",
-	})
+	utils.RespondWithSuccess(c, http.StatusCreated, nil, "User registered successfully")
 }
 
 // @Summary      Employee login
@@ -90,13 +78,13 @@ func RegisterHandler(c *gin.Context) {
 // @Param        login body model.LoginRequest true "Employee login credentials"
 // @Success      200 {object} model.ApiResponse "Login successful, token returned in data"
 // @Failure      400 {object} model.ApiResponse "Invalid request format"
-// @Failure      401 {object} model.ApiResponse "Invalid email or password"
+// @Failure      401 {object} model.ApiResponse "Invalid credentials"
 // @Failure      500 {object} model.ApiResponse "Internal server error"
 // @Router       /login/ [post]
 func LoginHandler(c *gin.Context) {
 	var req model.LoginDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Invalid request", http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
 
@@ -106,27 +94,23 @@ func LoginHandler(c *gin.Context) {
 		Where("email = ? AND is_active = ?", req.Email, true).
 		First(&user).Error
 
-	if err != nil {
-		utils.RespondWithError(c, "Invalid email or password", http.StatusUnauthorized)
-		return
-	}
-
-	if !utils.CheckPassword(req.Password, user.PasswordHash) {
-		utils.RespondWithError(c, "Invalid email or password", http.StatusUnauthorized)
+	if err != nil || utils.CheckPassword(req.Password, user.PasswordHash) {
+		utils.RespondWithCustomError(
+			c,
+			http.StatusUnauthorized,
+			"Email or password is incorrect",
+			"Invalid credentials",
+		)
 		return
 	}
 
 	token, err := utils.GenerateToken(&user)
 	if err != nil {
-		utils.RespondWithError(c, "Failed to generate token", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error logging user in")
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "Login successful",
-		Data:    token,
-	})
+	utils.RespondWithSuccess(c, http.StatusOK, token, "User successfully logged in")
 }
 
 // @Summary      Reset password request
@@ -142,7 +126,7 @@ func LoginHandler(c *gin.Context) {
 func ForgotPasswordHandler(c *gin.Context) {
 	var req model.ForgotPasswordDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Invalid request", http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
 
@@ -151,14 +135,13 @@ func ForgotPasswordHandler(c *gin.Context) {
 
 	err = database.DB.Where("email = ? AND is_active = ?", req.Email, true).First(&user).Error
 	if err != nil {
-		println(err.Error())
-		utils.RespondWithError(c, "Could not generate token", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error sending reset email")
 		return
 	}
 
 	token, err := utils.GenerateResetToken(32)
 	if err != nil {
-		utils.RespondWithError(c, "Could not generate token", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error sending reset email")
 		return
 	}
 
@@ -174,7 +157,7 @@ func ForgotPasswordHandler(c *gin.Context) {
 
 	err = database.DB.Create(&resetToken).Error
 	if err != nil {
-		utils.RespondWithError(c, "Could not generate token", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error sending reset email")
 		return
 	}
 
@@ -183,14 +166,11 @@ func ForgotPasswordHandler(c *gin.Context) {
 
 	err = utils.SendEmail(user.Email, "Reestablecimiento de contraseña", emailContent)
 	if err != nil {
-		utils.RespondWithError(c, "Could not send email", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error sending reset email")
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "Email sent succesfully",
-	})
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "Reset email sent")
 }
 
 // @Summary      Changes an user's password
@@ -209,7 +189,7 @@ func ResetPasswordHandler(c *gin.Context) {
 	var err error
 
 	if err = c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Invalid request", http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
 
@@ -220,19 +200,19 @@ func ResetPasswordHandler(c *gin.Context) {
 
 	err = database.DB.Where("token = ? AND is_used = ?", hex.EncodeToString(hash[:]), false).First(&resetToken).Error
 	if err != nil {
-		utils.RespondWithError(c, "Token verification failed", http.StatusUnauthorized)
+		utils.RespondWithInternalError(c, "Error resetting password")
 		return
 	}
 
 	err = database.DB.Where("id = ? AND is_active = ?", resetToken.UserID, true).First(&user).Error
 	if err != nil || time.Now().After(resetToken.Expiry) {
-		utils.RespondWithError(c, "Token verification failed", http.StatusUnauthorized)
+		utils.RespondWithInternalError(c, "Error resetting password")
 		return
 	}
 
 	paswordHash, err := utils.HashPassword(req.NewPassword)
 	if err != nil {
-		utils.RespondWithError(c, "Error hashing password", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error resetting password")
 		return
 	}
 
@@ -253,8 +233,5 @@ func ResetPasswordHandler(c *gin.Context) {
 		return nil
 	})
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "Password updated succesfully",
-	})
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "The user's password has been updated")
 }

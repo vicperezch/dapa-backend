@@ -4,12 +4,10 @@ import (
 	"dapa/app/model"
 	"dapa/app/utils"
 	"dapa/database"
-	"errors"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 // @Summary		Get all vehicles
@@ -23,7 +21,7 @@ import (
 func GetVehicles(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 	if claims.Role != "admin" {
-		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		utils.RespondWithUnathorizedError(c)
 		return
 	}
 
@@ -33,11 +31,11 @@ func GetVehicles(c *gin.Context) {
 		Find(&vehicles).Error
 
 	if err != nil {
-		utils.RespondWithError(c, "Error retrieving vehicles", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error fetching vehicles")
 		return
 	}
 
-	utils.RespondWithJSON(c, vehicles)
+	utils.RespondWithSuccess(c, http.StatusOK, vehicles, "Vehicles fetched successfully")
 }
 
 // @Summary		Get vehicle by ID
@@ -52,7 +50,7 @@ func GetVehicles(c *gin.Context) {
 func GetVehicleById(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 	if claims.Role != "admin" {
-		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		utils.RespondWithUnathorizedError(c)
 		return
 	}
 
@@ -64,11 +62,16 @@ func GetVehicleById(c *gin.Context) {
 		First(&vehicle).Error
 
 	if err != nil {
-		utils.RespondWithError(c, "Vehicle not found", http.StatusNotFound)
+		utils.RespondWithCustomError(
+			c,
+			http.StatusNotFound,
+			"Vehicle not found",
+			"Something went wrong",
+		)
 		return
 	}
 
-	utils.RespondWithJSON(c, vehicle)
+	utils.RespondWithSuccess(c, http.StatusOK, vehicle, "Vehicle fetched successfully")
 }
 
 // @Summary		Update vehicle by ID
@@ -85,20 +88,25 @@ func GetVehicleById(c *gin.Context) {
 func UpdateVehicle(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 	if claims.Role != "admin" {
-		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		utils.RespondWithUnathorizedError(c)
 		return
 	}
 
 	var req model.VehicleDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
 
 	id := c.Param("id")
 	var vehicle model.Vehicle
 	if err := database.DB.Where("id = ? AND is_active = ?", id, true).First(&vehicle).Error; err != nil {
-		utils.RespondWithError(c, "Vehicle not found", http.StatusNotFound)
+		utils.RespondWithCustomError(
+			c,
+			http.StatusNotFound,
+			"Vehicle not found",
+			"Something went wrong",
+		)
 		return
 	}
 
@@ -116,14 +124,11 @@ func UpdateVehicle(c *gin.Context) {
 	}
 
 	if err := database.DB.Save(&updated).Error; err != nil {
-		utils.RespondWithError(c, "Error updating vehicle", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error updating vehicle")
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "Vehicle updated successfully",
-	})
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "Vehicle updated successfully")
 }
 
 // @Summary		Create a new vehicle
@@ -139,19 +144,7 @@ func UpdateVehicle(c *gin.Context) {
 func CreateVehicle(c *gin.Context) {
 	var req model.VehicleDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			errorMessages := make([]string, len(ve))
-
-			for i, fe := range ve {
-				errorMessages[i] = utils.GetTagMessage(fe.Tag())
-			}
-
-			utils.RespondWithError(c, errorMessages[0], http.StatusBadRequest)
-			return
-		}
-
-		utils.RespondWithError(c, err.Error(), http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
 
@@ -166,14 +159,11 @@ func CreateVehicle(c *gin.Context) {
 
 	err := database.DB.Create(&vehicle).Error
 	if err != nil {
-		utils.RespondWithError(c, "Error creating vehicle", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error creating vehicle")
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "Vehicle created successfully",
-	})
+	utils.RespondWithSuccess(c, http.StatusCreated, nil, "Vehicle created successfully")
 }
 
 // @Summary		Mark vehicle as inactive
@@ -188,7 +178,7 @@ func CreateVehicle(c *gin.Context) {
 func DeleteVehicle(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 	if claims.Role != "admin" {
-		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		utils.RespondWithUnathorizedError(c)
 		return
 	}
 
@@ -202,12 +192,9 @@ func DeleteVehicle(c *gin.Context) {
 		}).Error
 
 	if err != nil {
-		utils.RespondWithError(c, "Error deleting vehicle", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error deleting vehicle")
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "Vehicle successfully deleted",
-	})
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "Vehicle deleted successfully")
 }

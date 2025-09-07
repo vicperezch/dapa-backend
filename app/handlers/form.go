@@ -17,25 +17,28 @@ import (
 func CreateQuestionType(c *gin.Context) {
 	var req model.CreateQuestionTypeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
+
 	qt := model.QuestionType{Type: req.Type}
 	if err := database.DB.Create(&qt).Error; err != nil {
-		utils.RespondWithError(c, "Error al crear tipo", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error creating question type")
 		return
 	}
-	utils.RespondWithJSON(c, model.ApiResponse{Success: true, Data: qt})
+
+	utils.RespondWithSuccess(c, http.StatusOK, qt, "Question type created")
 }
 
 // Listar tipos de pregunta
 func GetQuestionTypes(c *gin.Context) {
 	var types []model.QuestionType
 	if err := database.DB.Find(&types).Error; err != nil {
-		utils.RespondWithError(c, "Error al obtener tipos", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error fetching question types")
 		return
 	}
-	utils.RespondWithJSON(c, types)
+
+	utils.RespondWithSuccess(c, http.StatusOK, types, "Fetched question types successfully")
 }
 
 // ---------- PREGUNTAS ----------
@@ -44,7 +47,7 @@ func GetQuestionTypes(c *gin.Context) {
 func CreateQuestion(c *gin.Context) {
 	var req model.CreateQuestionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
 
@@ -61,7 +64,7 @@ func CreateQuestion(c *gin.Context) {
 	}
 
 	if err := database.DB.Create(&q).Error; err != nil {
-		utils.RespondWithError(c, "Error al crear pregunta", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error creating question")
 		return
 	}
 
@@ -75,30 +78,28 @@ func CreateQuestion(c *gin.Context) {
 			})
 		}
 		if err := database.DB.Create(&options).Error; err != nil {
-			utils.RespondWithError(c, "Error al crear opciones", http.StatusInternalServerError)
+			utils.RespondWithInternalError(c, "Error creating question options")
 			return
 		}
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "Pregunta creada correctamente",
-		Data:    q,
-	})
+	utils.RespondWithSuccess(c, http.StatusCreated, q, "Question created successfully")
 }
 
 // Listar preguntas
 func GetQuestions(c *gin.Context) {
 	var questions []model.Question
-	if err := database.DB.
+	err := database.DB.
 		Preload("Options").
 		Preload("Type").
 		Order("position ASC").
-		Find(&questions).Error; err != nil {
-		utils.RespondWithError(c, "Error al obtener preguntas", http.StatusInternalServerError)
+		Find(&questions).Error
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error fetching questions")
 		return
 	}
-	utils.RespondWithJSON(c, questions)
+
+	utils.RespondWithSuccess(c, http.StatusOK, questions, "Questions fetched successfully")
 }
 
 func GetActiveQuestions(c *gin.Context) {
@@ -109,10 +110,11 @@ func GetActiveQuestions(c *gin.Context) {
 		Where("is_active = ?", true).
 		Order("position ASC").
 		Find(&activeQuestions).Error; err != nil {
-		utils.RespondWithError(c, "Error al obtener preguntas activas", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error fetching active questions")
 		return
 	}
-	utils.RespondWithJSON(c, activeQuestions)
+
+	utils.RespondWithSuccess(c, http.StatusOK, activeQuestions, "Active questions fetched successfully")
 }
 
 // Obtener pregunta por ID
@@ -123,10 +125,16 @@ func GetQuestionByID(c *gin.Context) {
 		Preload("Options").
 		Preload("Type").
 		First(&question, id).Error; err != nil {
-		utils.RespondWithError(c, "Pregunta no encontrada", http.StatusNotFound)
+		utils.RespondWithCustomError(
+			c,
+			http.StatusNotFound,
+			"Question not found",
+			"Something went wrong",
+		)
 		return
 	}
-	utils.RespondWithJSON(c, question)
+
+	utils.RespondWithSuccess(c, http.StatusOK, question, "Question fetched successfully")
 }
 
 // Actualizar pregunta
@@ -135,22 +143,28 @@ func UpdateQuestion(c *gin.Context) {
 	var req model.UpdateQuestionRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
 
 	var question model.Question
 	if err := database.DB.Preload("Type").Preload("Options").First(&question, id).Error; err != nil {
-		utils.RespondWithError(c, "Pregunta no encontrada", http.StatusNotFound)
+		utils.RespondWithCustomError(
+			c,
+			http.StatusNotFound,
+			"Question not found",
+			"Something went wrong",
+		)
 		return
 	}
 
 	// Usar una transacción para garantizar consistencia
 	tx := database.DB.Begin()
 	if tx.Error != nil {
-		utils.RespondWithError(c, "Error iniciando transacción", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error updating question")
 		return
 	}
+
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
@@ -169,7 +183,7 @@ func UpdateQuestion(c *gin.Context) {
 		var newType model.QuestionType
 		if err := tx.First(&newType, question.TypeID).Error; err != nil {
 			tx.Rollback()
-			utils.RespondWithError(c, "Error recargando tipo de pregunta", http.StatusInternalServerError)
+			utils.RespondWithInternalError(c, "Error updating question")
 			return
 		}
 		question.Type = newType
@@ -181,7 +195,7 @@ func UpdateQuestion(c *gin.Context) {
 	// Guardar cambios básicos de la pregunta
 	if err := tx.Save(&question).Error; err != nil {
 		tx.Rollback()
-		utils.RespondWithError(c, "Error actualizando pregunta", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error updating question")
 		return
 	}
 
@@ -189,7 +203,7 @@ func UpdateQuestion(c *gin.Context) {
 	var questionType model.QuestionType
 	if err := tx.First(&questionType, question.TypeID).Error; err != nil {
 		tx.Rollback()
-		utils.RespondWithError(c, "Error obteniendo tipo de pregunta", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error updating question")
 		return
 	}
 
@@ -201,7 +215,12 @@ func UpdateQuestion(c *gin.Context) {
 		// Validación: preguntas con opciones deben tener al menos una
 		if requiresOptions && len(req.Options) == 0 {
 			tx.Rollback()
-			utils.RespondWithError(c, "Las preguntas de tipo múltiple, lista o única deben tener al menos una opción", http.StatusBadRequest)
+			utils.RespondWithCustomError(
+				c,
+				http.StatusBadRequest,
+				"Question type must have at least one option",
+				"Invalid request",
+			)
 			return
 		}
 
@@ -210,7 +229,7 @@ func UpdateQuestion(c *gin.Context) {
 			// Eliminar opciones existentes ya que el tipo no las necesita
 			if err := tx.Where("question_id = ?", question.ID).Delete(&model.QuestionOption{}).Error; err != nil {
 				tx.Rollback()
-				utils.RespondWithError(c, "Error eliminando opciones existentes", http.StatusInternalServerError)
+				utils.RespondWithInternalError(c, "Error updating question")
 				return
 			}
 		} else {
@@ -218,7 +237,7 @@ func UpdateQuestion(c *gin.Context) {
 			// Eliminar TODAS las opciones existentes de esta pregunta
 			if err := tx.Where("question_id = ?", question.ID).Delete(&model.QuestionOption{}).Error; err != nil {
 				tx.Rollback()
-				utils.RespondWithError(c, "Error eliminando opciones existentes", http.StatusInternalServerError)
+				utils.RespondWithInternalError(c, "Error updating question")
 				return
 			}
 
@@ -236,7 +255,7 @@ func UpdateQuestion(c *gin.Context) {
 				// Insertar todas las opciones de una vez
 				if err := tx.Create(&newOptions).Error; err != nil {
 					tx.Rollback()
-					utils.RespondWithError(c, "Error creando nuevas opciones", http.StatusInternalServerError)
+					utils.RespondWithInternalError(c, "Error updating question")
 					return
 				}
 			}
@@ -247,7 +266,7 @@ func UpdateQuestion(c *gin.Context) {
 		if !requiresOptions {
 			if err := tx.Where("question_id = ?", question.ID).Delete(&model.QuestionOption{}).Error; err != nil {
 				tx.Rollback()
-				utils.RespondWithError(c, "Error eliminando opciones existentes", http.StatusInternalServerError)
+				utils.RespondWithInternalError(c, "Error updating question")
 				return
 			}
 		}
@@ -256,13 +275,13 @@ func UpdateQuestion(c *gin.Context) {
 
 	// Confirmar la transacción
 	if err := tx.Commit().Error; err != nil {
-		utils.RespondWithError(c, "Error confirmando cambios", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error updating question")
 		return
 	}
 
 	// Recargar la pregunta con sus relaciones actualizadas para la respuesta
 	if err := database.DB.Preload("Type").Preload("Options").First(&question, question.ID).Error; err != nil {
-		utils.RespondWithError(c, "Error recargando pregunta actualizada", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error updating question")
 		return
 	}
 
@@ -286,14 +305,14 @@ func UpdateQuestion(c *gin.Context) {
 		response.Options = append(response.Options, optResponse)
 	}
 
-	utils.RespondWithJSON(c, response)
+	utils.RespondWithSuccess(c, http.StatusOK, response, "Question updated")
 }
 
 // Reordenar preguntas (intercambiar posiciones)
 func ReorderQuestions(c *gin.Context) {
 	var req model.ReorderQuestionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
 
@@ -301,18 +320,28 @@ func ReorderQuestions(c *gin.Context) {
 
 	// Buscar las preguntas involucradas
 	if err := database.DB.First(&source, req.SourceID).Error; err != nil {
-		utils.RespondWithError(c, "Pregunta origen no encontrada", http.StatusNotFound)
+		utils.RespondWithCustomError(
+			c,
+			http.StatusNotFound,
+			"Origin question not found",
+			"Error reordering questions",
+		)
 		return
 	}
 	if err := database.DB.First(&target, req.TargetID).Error; err != nil {
-		utils.RespondWithError(c, "Pregunta destino no encontrada", http.StatusNotFound)
+		utils.RespondWithCustomError(
+			c,
+			http.StatusNotFound,
+			"Target question not found",
+			"Error reordering questions",
+		)
 		return
 	}
 
 	// Intercambiar posiciones dentro de una transacción
 	tx := database.DB.Begin()
 	if tx.Error != nil {
-		utils.RespondWithError(c, "Error iniciando transacción", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error reordering questions")
 		return
 	}
 
@@ -321,31 +350,29 @@ func ReorderQuestions(c *gin.Context) {
 
 	if err := tx.Model(&source).Update("position", targetPos).Error; err != nil {
 		tx.Rollback()
-		utils.RespondWithError(c, "Error actualizando posición origen", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error reordering questions")
 		return
 	}
 
 	if err := tx.Model(&target).Update("position", sourcePos).Error; err != nil {
 		tx.Rollback()
-		utils.RespondWithError(c, "Error actualizando posición destino", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error reordering questions")
 		return
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		utils.RespondWithError(c, "Error confirmando cambios", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error reordering questions")
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "Preguntas reordenadas correctamente",
-		Data: map[string]interface{}{
-			"source": source.ID,
-			"newPos": targetPos,
-			"target": target.ID,
-			"oldPos": targetPos,
-		},
-	})
+	utils.RespondWithSuccess(c, http.StatusOK, map[string]interface{}{
+		"source": source.ID,
+		"newPos": targetPos,
+		"target": target.ID,
+		"oldPos": targetPos,
+	},
+		"Questions reordered",
+	)
 }
 
 func ToggleQuestionActive(c *gin.Context) {
@@ -353,21 +380,23 @@ func ToggleQuestionActive(c *gin.Context) {
 
 	var question model.Question
 	if err := database.DB.First(&question, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
+		utils.RespondWithCustomError(
+			c,
+			http.StatusNotFound,
+			"Question not found",
+			"Error updating question",
+		)
 		return
 	}
 
 	question.IsActive = !question.IsActive
 
 	if err := database.DB.Save(&question).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update question"})
+		utils.RespondWithInternalError(c, "Error updating question")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"id":        question.ID,
-		"is_active": question.IsActive,
-	})
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "Question updated successfully")
 }
 
 // Eliminar pregunta
@@ -375,14 +404,11 @@ func DeleteQuestion(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := database.DB.Delete(&model.Question{}, id).Error; err != nil {
-		utils.RespondWithError(c, "Error al eliminar pregunta", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error deleting question")
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "Pregunta eliminada",
-	})
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "Question deleted")
 }
 
 // ---------- OPCIONES DE PREGUNTA ----------
@@ -392,64 +418,69 @@ func CreateQuestionOption(c *gin.Context) {
 	var req model.QuestionOptionRequest
 	questionID, err := strconv.Atoi(c.Param("questionId"))
 	if err != nil {
-		utils.RespondWithError(c, "ID inválido", http.StatusBadRequest)
+		utils.RespondWithCustomError(
+			c,
+			http.StatusBadRequest,
+			"Invalid ID",
+			"Invalid request format",
+		)
 		return
 	}
 	option := model.QuestionOption{QuestionID: uint(questionID), Option: req.Option}
 	if err := database.DB.Create(&option).Error; err != nil {
-		utils.RespondWithError(c, "Error al crear opción", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error creating question option")
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{Success: true, Data: option})
+	utils.RespondWithSuccess(c, http.StatusCreated, option, "Question option created successfully")
 }
 
 // ---------- ENVÍOS DE FORMULARIO ----------
 
 // Crear envio
 func CreateSubmission(c *gin.Context) {
-    var req model.CreateSubmissionRequest
-    if err := c.ShouldBindJSON(&req); err != nil {
-        utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
-        return
-    }
+	var req model.CreateSubmissionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
+		return
+	}
 
-    submission := model.Submission{
-        SubmittedAt: time.Now(),
-        Status:      "pending",
-    }
+	submission := model.Submission{
+		SubmittedAt: time.Now(),
+		Status:      "pending",
+	}
 
-    // Preparar las respuestas
-    var answers []model.Answer
-    for _, ans := range req.Answers {
-        answer := model.Answer{
-            QuestionID: ans.QuestionID,
-        }
+	// Preparar las respuestas
+	var answers []model.Answer
+	for _, ans := range req.Answers {
+		answer := model.Answer{
+			QuestionID: ans.QuestionID,
+		}
 
-        if ans.Answer != nil {
-            answer.Answer = ans.Answer
-        }
+		if ans.Answer != nil {
+			answer.Answer = ans.Answer
+		}
 
-        if len(ans.OptionsID) > 0 {
-            var options []model.QuestionOption
-            if err := database.DB.Where("id IN ?", ans.OptionsID).Find(&options).Error; err != nil {
-                utils.RespondWithError(c, "Error al encontrar las opciones", http.StatusInternalServerError)
-                return
-            }
-            answer.Options = options
-        }
+		if len(ans.OptionsID) > 0 {
+			var options []model.QuestionOption
+			if err := database.DB.Where("id IN ?", ans.OptionsID).Find(&options).Error; err != nil {
+				utils.RespondWithInternalError(c, "Error creating submission")
+				return
+			}
+			answer.Options = options
+		}
 
-        answers = append(answers, answer)
-    }
+		answers = append(answers, answer)
+	}
 
-    submission.Answers = answers
+	submission.Answers = answers
 
-    if err := database.DB.Create(&submission).Error; err != nil {
-        utils.RespondWithError(c, "Error al crear la submission", http.StatusInternalServerError)
-        return
-    }
+	if err := database.DB.Create(&submission).Error; err != nil {
+		utils.RespondWithInternalError(c, "Error creating submission")
+		return
+	}
 
-    utils.RespondWithJSON(c, submission)
+	utils.RespondWithSuccess(c, http.StatusCreated, submission, "Submission created")
 }
 
 // Listar envíos
@@ -463,11 +494,11 @@ func GetSubmissions(c *gin.Context) {
 		Preload("Answers.Question.Options").
 		Preload("Answers.Options").
 		Find(&submissions).Error; err != nil {
-		utils.RespondWithError(c, "Error al obtener envíos", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error fetching submissions")
 		return
 	}
 
-	utils.RespondWithJSON(c, submissions)
+	utils.RespondWithSuccess(c, http.StatusOK, submissions, "Submissions fetched successfully")
 }
 
 // GetSubmissionByID obtiene una submission con sus respuestas, preguntas y opciones asociadas
@@ -482,11 +513,11 @@ func GetSubmissionByID(c *gin.Context) {
 		Preload("Answers.Question.Options").
 		Preload("Answers.Options").
 		First(&submission, "id = ?", id).Error; err != nil {
-		utils.RespondWithError(c, "Error al obtener el envío", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error fetching submission")
 		return
 	}
 
-	utils.RespondWithJSON(c, submission)
+	utils.RespondWithSuccess(c, http.StatusOK, submission, "Submission fetched successfully")
 }
 
 // Obtener estadisticas de las submissions
@@ -507,7 +538,7 @@ func GetSubmissionStats(c *gin.Context) {
 		Group("question_id, option_id").
 		Scan(&stats.AnswersByQuestion)
 
-	utils.RespondWithJSON(c, stats)
+	utils.RespondWithSuccess(c, http.StatusOK, stats, "Submission stats fetched successfully")
 }
 
 // Actualizar estado de envío
@@ -515,13 +546,15 @@ func UpdateSubmissionStatus(c *gin.Context) {
 	id := c.Param("id")
 	var req model.UpdateSubmissionStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Formato inválido", http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
+
 	if err := database.DB.Model(&model.Submission{}).Where("id = ?", id).
 		Update("status", req.Status).Error; err != nil {
-		utils.RespondWithError(c, "Error al actualizar estado", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error updating submission")
 		return
 	}
-	utils.RespondWithJSON(c, model.ApiResponse{Success: true, Message: "Estado actualizado"})
+
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "Submission updated successfully")
 }

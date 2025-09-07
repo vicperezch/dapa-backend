@@ -23,18 +23,18 @@ func GetUsers(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 
 	if claims.Role != "admin" {
-		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		utils.RespondWithUnathorizedError(c)
 		return
 	}
 
 	var users []model.User
 
 	if err := database.DB.Where("is_active = ?", true).Find(&users).Error; err != nil {
-		utils.RespondWithError(c, "Error getting all users", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error fetching users")
 		return
 	}
 
-	utils.RespondWithJSON(c, users)
+	utils.RespondWithSuccess(c, http.StatusOK, users, "Users fetched successfully")
 }
 
 // @Summary		Get user by ID
@@ -47,7 +47,6 @@ func GetUsers(c *gin.Context) {
 // @Failure		500	{object} model.ApiResponse "Error fetching user"
 // @Router		/users/{id} [get]
 func GetUserById(c *gin.Context) {
-
 	var user model.User
 
 	id := c.Param("id")
@@ -55,11 +54,11 @@ func GetUserById(c *gin.Context) {
 		Where("id = ? AND is_active = ?", id, true).
 		First(&user).Error; err != nil {
 
-		utils.RespondWithError(c, "Error getting user", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error fetching user")
 		return
 	}
 
-	utils.RespondWithJSON(c, user)
+	utils.RespondWithSuccess(c, http.StatusOK, user, "User fetched successfully")
 }
 
 // @Summary		Update user by ID
@@ -78,20 +77,25 @@ func GetUserById(c *gin.Context) {
 func UpdateUser(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 	if claims.Role != "admin" {
-		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		utils.RespondWithUnathorizedError(c)
 		return
 	}
 
 	var req model.UserDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
 
 	id := c.Param("id")
 	var user model.User
 	if err := database.DB.Where("id = ? AND is_active = ?", id, true).First(&user).Error; err != nil {
-		utils.RespondWithError(c, "User not found", http.StatusNotFound)
+		utils.RespondWithCustomError(
+			c,
+			http.StatusNotFound,
+			"User not found",
+			"Something went wrong",
+		)
 		return
 	}
 
@@ -109,14 +113,11 @@ func UpdateUser(c *gin.Context) {
 	}
 
 	if err := database.DB.Save(&updated).Error; err != nil {
-		utils.RespondWithError(c, "Error updating user", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error updating user")
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "User updated successfully",
-	})
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "User updated successfully")
 }
 
 // @Summary		    Mark user as inactive
@@ -131,7 +132,7 @@ func UpdateUser(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 	if claims.Role != "admin" {
-		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		utils.RespondWithUnathorizedError(c)
 		return
 	}
 
@@ -139,18 +140,15 @@ func DeleteUser(c *gin.Context) {
 
 	err := database.DB.Model(&model.User{}).
 		Where("id = ?", id).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"deleted_at": time.Now(),
 			"is_active":  false,
 		}).Error
 
 	if err != nil {
-		utils.RespondWithError(c, "Error deleting user", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error deleting user")
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "User successfully deleted",
-	})
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "User deleted successfully")
 }

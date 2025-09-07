@@ -18,7 +18,7 @@ var PasswordValidator validator.Func = func(fl validator.FieldLevel) bool {
 // The phone number must contain only digits.
 var PhoneValidator validator.Func = func(fl validator.FieldLevel) bool {
 	phone := fl.Field().String()
-	return IsAllDigits(phone)
+	return isAllDigits(phone)
 }
 
 // Compara la placa con el formato estándar en Guatemala
@@ -60,4 +60,3 @@ var SubmissionStatusValidator validator.Func = func(fl validator.FieldLevel) boo
 	status := fl.Field().String()
 	return status == "pending" || status == "approved" || status == "rejected"
 }
-

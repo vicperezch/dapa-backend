@@ -33,21 +33,21 @@ func GetOrders(c *gin.Context) {
 		}
 
 		if err != nil {
-			utils.RespondWithError(c, "Error retrieving orders", http.StatusInternalServerError)
+			utils.RespondWithInternalError(c, "Error fetching orders")
 			return
 		}
 
-		utils.RespondWithJSON(c, orders)
+		utils.RespondWithSuccess(c, http.StatusOK, orders, "Orders fetched successfully")
 		return
 	}
 
 	err = database.DB.Where("user_id = ?", claims.ID).Find(&orders).Error
 	if err != nil {
-		utils.RespondWithError(c, "Error retrieving orders", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error fetching orders")
 		return
 	}
 
-	utils.RespondWithJSON(c, orders)
+	utils.RespondWithSuccess(c, http.StatusOK, orders, "Orders fetched successfully")
 }
 
 // @Summary		Get one order by ID
@@ -62,7 +62,7 @@ func GetOrders(c *gin.Context) {
 func GetOrderById(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 	if claims.Role != "admin" {
-		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		utils.RespondWithUnathorizedError(c)
 		return
 	}
 
@@ -71,11 +71,11 @@ func GetOrderById(c *gin.Context) {
 	id := c.Param("id")
 	err := database.DB.Where("id = ?", id).First(&order).Error
 	if err != nil {
-		utils.RespondWithError(c, "Error retrieving order", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error fetching order")
 		return
 	}
 
-	utils.RespondWithJSON(c, order)
+	utils.RespondWithSuccess(c, http.StatusOK, order, "Order fetched successfully")
 }
 
 // @Summary		Update one order
@@ -92,13 +92,13 @@ func GetOrderById(c *gin.Context) {
 func UpdateOrder(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 	if claims.Role != "admin" {
-		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		utils.RespondWithUnathorizedError(c)
 		return
 	}
 
 	var req model.OrderDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
 
@@ -108,7 +108,12 @@ func UpdateOrder(c *gin.Context) {
 	err = database.DB.Where("id = ?", id).First(&order).Error
 
 	if err != nil {
-		utils.RespondWithError(c, "Order not found", http.StatusNotFound)
+		utils.RespondWithCustomError(
+			c,
+			http.StatusNotFound,
+			"Order not found",
+			"Something went wrong",
+		)
 		return
 	}
 
@@ -131,14 +136,11 @@ func UpdateOrder(c *gin.Context) {
 
 	err = database.DB.Save(&order).Error
 	if err != nil {
-		utils.RespondWithError(c, "Error updating order", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error updating order")
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "Order updated successfully",
-	})
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "Order updated successfully")
 }
 
 // @Summary		Assigns a driver and vehicle
@@ -155,13 +157,13 @@ func UpdateOrder(c *gin.Context) {
 func AssignOrder(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 	if claims.Role != "admin" {
-		utils.RespondWithError(c, "Insufficient permissions", http.StatusForbidden)
+		utils.RespondWithUnathorizedError(c)
 		return
 	}
 
 	var req model.AssignOrderDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, "Invalid request format", http.StatusBadRequest)
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
 	}
 
@@ -171,7 +173,12 @@ func AssignOrder(c *gin.Context) {
 
 	err = database.DB.Where("id = ?", id).First(&order).Error
 	if err != nil {
-		utils.RespondWithError(c, "Order not found", http.StatusNotFound)
+		utils.RespondWithCustomError(
+			c,
+			http.StatusNotFound,
+			"Order not found",
+			"Something went wrong",
+		)
 		return
 	}
 
@@ -180,12 +187,9 @@ func AssignOrder(c *gin.Context) {
 
 	err = database.DB.Save(&order).Error
 	if err != nil {
-		utils.RespondWithError(c, "Error assigning order", http.StatusInternalServerError)
+		utils.RespondWithInternalError(c, "Error assigning order")
 		return
 	}
 
-	utils.RespondWithJSON(c, model.ApiResponse{
-		Success: true,
-		Message: "Order assigned successfully",
-	})
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "Order assigned successfully")
 }

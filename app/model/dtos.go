@@ -51,7 +51,7 @@ type OrderDTO struct {
 	Destination string  `json:"destination" binding:"required"`
 	TotalAmount float64 `json:"totalAmount" binding:"required"`
 	Details     *string `json:"details"`
-	Type        string  `json:"type" binding:"requried"`
+	Type        string  `json:"type" binding:"required"`
 }
 
 type AssignOrderDTO struct {
@@ -95,9 +95,9 @@ type ReorderQuestionRequest struct {
 }
 
 type AnswerRequest struct {
-	QuestionID  uint       `json:"questionId,omitempty"`
-	Answer      *string    `json:"answer,omitempty"`
-	OptionsID   []uint     `json:"optionsId,omitempty"`
+	QuestionID uint    `json:"questionId,omitempty"`
+	Answer     *string `json:"answer,omitempty"`
+	OptionsID  []uint  `json:"optionsId,omitempty"`
 }
 
 type CreateSubmissionRequest struct {
@@ -157,7 +157,8 @@ type SubmissionFilters struct {
 }
 
 type ApiResponse struct {
-	Success bool   `json:"success,omitempty"`
-	Message string `json:"message,omitempty"`
-	Data    any    `json:"data,omitempty"`
+	Success bool     `json:"success"`
+	Message string   `json:"message"`
+	Data    any      `json:"data"`
+	Errors  []string `json:"errors"`
 }
