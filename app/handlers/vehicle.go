@@ -18,13 +18,7 @@ import (
 // @Failure		403	{object} model.ApiResponse "Insufficient permissions"
 // @Failure		500	{object} model.ApiResponse "Error fetching vehicles"
 // @Router		/vehicles/ [get]
-func GetVehicles(c *gin.Context) {
-	claims := c.MustGet("claims").(*model.EmployeeClaims)
-	if claims.Role != "admin" {
-		utils.RespondWithUnathorizedError(c)
-		return
-	}
-
+func GetVehiclesHandler(c *gin.Context) {
 	var vehicles []model.Vehicle
 	err := database.DB.
 		Where("is_active = ?", true).
@@ -47,13 +41,7 @@ func GetVehicles(c *gin.Context) {
 // @Failure		403	{object} model.ApiResponse "Insufficient permissions"
 // @Failure		500	{object} model.ApiResponse "Error fetching vehicle"
 // @Router		/vehicles/{id} [get]
-func GetVehicleById(c *gin.Context) {
-	claims := c.MustGet("claims").(*model.EmployeeClaims)
-	if claims.Role != "admin" {
-		utils.RespondWithUnathorizedError(c)
-		return
-	}
-
+func GetVehicleHandler(c *gin.Context) {
 	id := c.Param("id")
 	var vehicle model.Vehicle
 
@@ -85,13 +73,7 @@ func GetVehicleById(c *gin.Context) {
 // @Failure		400	{object} model.ApiResponse "Invalid request format"
 // @Failure		500	{object} model.ApiResponse "Error updating vehicle"
 // @Router		/vehicles/{id} [put]
-func UpdateVehicle(c *gin.Context) {
-	claims := c.MustGet("claims").(*model.EmployeeClaims)
-	if claims.Role != "admin" {
-		utils.RespondWithUnathorizedError(c)
-		return
-	}
-
+func UpdateVehicleHandler(c *gin.Context) {
 	var req model.VehicleDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
@@ -141,7 +123,7 @@ func UpdateVehicle(c *gin.Context) {
 // @Failure		400	{object} model.ApiResponse "Invalid request format"
 // @Failure		500	{object} model.ApiResponse "Error creating new vehicle"
 // @Router		/vehicles/ [post]
-func CreateVehicle(c *gin.Context) {
+func CreateVehicleHandler(c *gin.Context) {
 	var req model.VehicleDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
@@ -175,13 +157,7 @@ func CreateVehicle(c *gin.Context) {
 // @Failure		403	{object} model.ApiResponse "Insufficient permissions"
 // @Failure		500	{object} model.ApiResponse "Error updating vehicle status"
 // @Router		/vehicles/{id} [delete]
-func DeleteVehicle(c *gin.Context) {
-	claims := c.MustGet("claims").(*model.EmployeeClaims)
-	if claims.Role != "admin" {
-		utils.RespondWithUnathorizedError(c)
-		return
-	}
-
+func DeleteVehicleHandler(c *gin.Context) {
 	id := c.Param("id")
 
 	err := database.DB.Model(&model.Vehicle{}).

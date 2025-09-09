@@ -26,13 +26,6 @@ import (
 // @Failure      500 {object} model.ApiResponse "Internal server error"
 // @Router       /users/ [post]
 func RegisterHandler(c *gin.Context) {
-	claims := c.MustGet("claims").(*model.EmployeeClaims)
-
-	if claims.Role != "admin" {
-		utils.RespondWithUnathorizedError(c)
-		return
-	}
-
 	var req model.RegisterDTO
 	var err error
 
@@ -187,7 +180,6 @@ func ForgotPasswordHandler(c *gin.Context) {
 func ResetPasswordHandler(c *gin.Context) {
 	var req model.ResetPasswordDTO
 	var err error
-
 	if err = c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return

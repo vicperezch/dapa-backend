@@ -39,7 +39,7 @@ func TestGetVehicles_Success(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/vehicles", nil)
 	c.Request = req
 
-	handlers.GetVehicles(c)
+	handlers.GetVehiclesHandler(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 }
@@ -65,7 +65,7 @@ func TestGetVehicleById_Success(t *testing.T) {
 	c.Params = gin.Params{{Key: "id", Value: "1"}}
 	c.Request = req
 
-	handlers.GetVehicleById(c)
+	handlers.GetVehicleHandler(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), "Toyota")
@@ -92,7 +92,7 @@ func TestCreateVehicle_Success(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	c.Request = req
 
-	handlers.CreateVehicle(c)
+	handlers.CreateVehicleHandler(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), "Vehicle created successfully")

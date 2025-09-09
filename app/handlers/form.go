@@ -12,26 +12,8 @@ import (
 )
 
 // ---------- TIPOS DE PREGUNTA ----------
-
-// Crear tipo de pregunta
-func CreateQuestionType(c *gin.Context) {
-	var req model.CreateQuestionTypeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
-		return
-	}
-
-	qt := model.QuestionType{Type: req.Type}
-	if err := database.DB.Create(&qt).Error; err != nil {
-		utils.RespondWithInternalError(c, "Error creating question type")
-		return
-	}
-
-	utils.RespondWithSuccess(c, http.StatusOK, qt, "Question type created")
-}
-
 // Listar tipos de pregunta
-func GetQuestionTypes(c *gin.Context) {
+func GetQuestionTypesHandler(c *gin.Context) {
 	var types []model.QuestionType
 	if err := database.DB.Find(&types).Error; err != nil {
 		utils.RespondWithInternalError(c, "Error fetching question types")
@@ -44,8 +26,8 @@ func GetQuestionTypes(c *gin.Context) {
 // ---------- PREGUNTAS ----------
 
 // Crear pregunta
-func CreateQuestion(c *gin.Context) {
-	var req model.CreateQuestionRequest
+func CreateQuestionHandler(c *gin.Context) {
+	var req model.QuestionDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
@@ -87,7 +69,7 @@ func CreateQuestion(c *gin.Context) {
 }
 
 // Listar preguntas
-func GetQuestions(c *gin.Context) {
+func GetQuestionsHandler(c *gin.Context) {
 	var questions []model.Question
 	err := database.DB.
 		Preload("Options").
@@ -102,7 +84,7 @@ func GetQuestions(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusOK, questions, "Questions fetched successfully")
 }
 
-func GetActiveQuestions(c *gin.Context) {
+func GetActiveQuestionsHandler(c *gin.Context) {
 	var activeQuestions []model.Question
 	if err := database.DB.
 		Preload("Options").
@@ -118,7 +100,7 @@ func GetActiveQuestions(c *gin.Context) {
 }
 
 // Obtener pregunta por ID
-func GetQuestionByID(c *gin.Context) {
+func GetQuestionHandler(c *gin.Context) {
 	id := c.Param("id")
 	var question model.Question
 	if err := database.DB.
@@ -138,9 +120,9 @@ func GetQuestionByID(c *gin.Context) {
 }
 
 // Actualizar pregunta
-func UpdateQuestion(c *gin.Context) {
+func UpdateQuestionHandler(c *gin.Context) {
 	id := c.Param("id")
-	var req model.UpdateQuestionRequest
+	var req model.QuestionDTO
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
@@ -172,22 +154,20 @@ func UpdateQuestion(c *gin.Context) {
 	}()
 
 	// Actualizar campos básicos
-	if req.Question != nil {
-		question.Question = *req.Question
-	}
+	question.Question = req.Question
 	if req.Description != nil {
 		question.Description = req.Description
 	}
-	if req.TypeID != nil {
-		question.TypeID = *req.TypeID
-		var newType model.QuestionType
-		if err := tx.First(&newType, question.TypeID).Error; err != nil {
-			tx.Rollback()
-			utils.RespondWithInternalError(c, "Error updating question")
-			return
-		}
-		question.Type = newType
+
+	question.TypeID = req.TypeID
+	var newType model.QuestionType
+	if err := tx.First(&newType, question.TypeID).Error; err != nil {
+		tx.Rollback()
+		utils.RespondWithInternalError(c, "Error updating question")
+		return
 	}
+
+	question.Type = newType
 	if req.IsActive != nil {
 		question.IsActive = *req.IsActive
 	}
@@ -232,6 +212,7 @@ func UpdateQuestion(c *gin.Context) {
 				utils.RespondWithInternalError(c, "Error updating question")
 				return
 			}
+
 		} else {
 			// El tipo SÍ requiere opciones, procesarlas
 			// Eliminar TODAS las opciones existentes de esta pregunta
@@ -260,6 +241,7 @@ func UpdateQuestion(c *gin.Context) {
 				}
 			}
 		}
+
 	} else {
 		// req.Options es nil - no se enviaron opciones
 		// Si el tipo cambió a uno que no requiere opciones, eliminarlas
@@ -279,38 +261,12 @@ func UpdateQuestion(c *gin.Context) {
 		return
 	}
 
-	// Recargar la pregunta con sus relaciones actualizadas para la respuesta
-	if err := database.DB.Preload("Type").Preload("Options").First(&question, question.ID).Error; err != nil {
-		utils.RespondWithInternalError(c, "Error updating question")
-		return
-	}
-
-	// Convertir a response DTO
-	response := model.QuestionResponse{
-		ID:          question.ID,
-		Question:    question.Question,
-		Description: question.Description,
-		TypeID:      question.TypeID,
-		Type:        question.Type.Type,
-		IsActive:    question.IsActive,
-		Options:     make([]model.QuestionOptionResponse, 0),
-	}
-
-	// Mapear opciones a response
-	for _, opt := range question.Options {
-		optResponse := model.QuestionOptionResponse{
-			ID:     opt.ID,
-			Option: opt.Option,
-		}
-		response.Options = append(response.Options, optResponse)
-	}
-
-	utils.RespondWithSuccess(c, http.StatusOK, response, "Question updated")
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "Question updated")
 }
 
 // Reordenar preguntas (intercambiar posiciones)
-func ReorderQuestions(c *gin.Context) {
-	var req model.ReorderQuestionRequest
+func ReorderQuestionsHandler(c *gin.Context) {
+	var req model.ReorderQuestionDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
@@ -365,7 +321,7 @@ func ReorderQuestions(c *gin.Context) {
 		return
 	}
 
-	utils.RespondWithSuccess(c, http.StatusOK, map[string]interface{}{
+	utils.RespondWithSuccess(c, http.StatusOK, map[string]any{
 		"source": source.ID,
 		"newPos": targetPos,
 		"target": target.ID,
@@ -375,7 +331,7 @@ func ReorderQuestions(c *gin.Context) {
 	)
 }
 
-func ToggleQuestionActive(c *gin.Context) {
+func ToggleQuestionActiveHandler(c *gin.Context) {
 	id := c.Param("id")
 
 	var question model.Question
@@ -400,7 +356,7 @@ func ToggleQuestionActive(c *gin.Context) {
 }
 
 // Eliminar pregunta
-func DeleteQuestion(c *gin.Context) {
+func DeleteQuestionHandler(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := database.DB.Delete(&model.Question{}, id).Error; err != nil {
@@ -414,8 +370,8 @@ func DeleteQuestion(c *gin.Context) {
 // ---------- OPCIONES DE PREGUNTA ----------
 
 // Crear opción
-func CreateQuestionOption(c *gin.Context) {
-	var req model.QuestionOptionRequest
+func CreateQuestionOptionHandler(c *gin.Context) {
+	var req model.QuestionOptionDTO
 	questionID, err := strconv.Atoi(c.Param("questionId"))
 	if err != nil {
 		utils.RespondWithCustomError(
@@ -438,8 +394,8 @@ func CreateQuestionOption(c *gin.Context) {
 // ---------- ENVÍOS DE FORMULARIO ----------
 
 // Crear envio
-func CreateSubmission(c *gin.Context) {
-	var req model.CreateSubmissionRequest
+func CreateSubmissionHandler(c *gin.Context) {
+	var req model.CreateSubmissionDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return
@@ -484,7 +440,7 @@ func CreateSubmission(c *gin.Context) {
 }
 
 // Listar envíos
-func GetSubmissions(c *gin.Context) {
+func GetSubmissionsHandler(c *gin.Context) {
 	var submissions []model.Submission
 
 	if err := database.DB.
@@ -502,7 +458,7 @@ func GetSubmissions(c *gin.Context) {
 }
 
 // GetSubmissionByID obtiene una submission con sus respuestas, preguntas y opciones asociadas
-func GetSubmissionByID(c *gin.Context) {
+func GetSubmissionHandler(c *gin.Context) {
 	id := c.Param("id")
 
 	var submission model.Submission
@@ -520,31 +476,10 @@ func GetSubmissionByID(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusOK, submission, "Submission fetched successfully")
 }
 
-// Obtener estadisticas de las submissions
-func GetSubmissionStats(c *gin.Context) {
-	var stats model.SubmissionStats
-
-	// Total submissions
-	database.DB.Model(&model.Submission{}).Count(&stats.TotalSubmissions)
-
-	// Submissions by status
-	database.DB.Model(&model.Submission{}).
-		Select("status, COUNT(*) as count").
-		Group("status").Scan(&stats.SubmissionsByStatus)
-
-	// Answers distribution by question/option
-	database.DB.Model(&model.Answer{}).
-		Select("question_id, option_id, COUNT(*) as count").
-		Group("question_id, option_id").
-		Scan(&stats.AnswersByQuestion)
-
-	utils.RespondWithSuccess(c, http.StatusOK, stats, "Submission stats fetched successfully")
-}
-
 // Actualizar estado de envío
-func UpdateSubmissionStatus(c *gin.Context) {
+func UpdateSubmissionStatusHandler(c *gin.Context) {
 	id := c.Param("id")
-	var req model.UpdateSubmissionStatusRequest
+	var req model.UpdateSubmissionStatusDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
 		return

@@ -17,7 +17,7 @@ import (
 // @Success		200	{array} model.Order "List of orders"
 // @Failure		500	{object} model.ApiResponse "Error retrieving orders"
 // @Router		/orders/ [get]
-func GetOrders(c *gin.Context) {
+func GetOrdersHandler(c *gin.Context) {
 	claims := c.MustGet("claims").(*model.EmployeeClaims)
 	status := c.Query("status")
 
@@ -59,13 +59,7 @@ func GetOrders(c *gin.Context) {
 // @Failure		403	{object} model.ApiResponse "Insufficient permissions"
 // @Failure		500	{object} model.ApiResponse "Error retrieving order"
 // @Router		/orders/{id} [get]
-func GetOrderById(c *gin.Context) {
-	claims := c.MustGet("claims").(*model.EmployeeClaims)
-	if claims.Role != "admin" {
-		utils.RespondWithUnathorizedError(c)
-		return
-	}
-
+func GetOrderHandler(c *gin.Context) {
 	var order model.Order
 
 	id := c.Param("id")
@@ -89,13 +83,7 @@ func GetOrderById(c *gin.Context) {
 // @Failure		404 {object} model.ApiResponse "Order not found"
 // @Failure		500 {object} model.ApiResponse "Error updating order"
 // @Router		/orders/{id} [put]
-func UpdateOrder(c *gin.Context) {
-	claims := c.MustGet("claims").(*model.EmployeeClaims)
-	if claims.Role != "admin" {
-		utils.RespondWithUnathorizedError(c)
-		return
-	}
-
+func UpdateOrderHandler(c *gin.Context) {
 	var req model.OrderDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
@@ -154,13 +142,7 @@ func UpdateOrder(c *gin.Context) {
 // @Failure		404 {object} model.ApiResponse "Order not found"
 // @Failure		500 {object} model.ApiResponse "Error assigning order"
 // @Router		/orders/{id} [patch]
-func AssignOrder(c *gin.Context) {
-	claims := c.MustGet("claims").(*model.EmployeeClaims)
-	if claims.Role != "admin" {
-		utils.RespondWithUnathorizedError(c)
-		return
-	}
-
+func AssignOrderHandler(c *gin.Context) {
 	var req model.AssignOrderDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")

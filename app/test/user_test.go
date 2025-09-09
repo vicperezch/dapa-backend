@@ -45,7 +45,7 @@ func TestGetUsers_AdminAccess(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/users", nil)
 	c.Request = req
 
-	handlers.GetUsers(c)
+	handlers.GetUsersHandler(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), "test@example.com")
@@ -62,7 +62,7 @@ func TestGetUsers_Forbidden(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/users", nil)
 	c.Request = req
 
-	handlers.GetUsers(c)
+	handlers.GetUsersHandler(c)
 
 	assert.Equal(t, http.StatusForbidden, w.Code)
 	assert.Contains(t, w.Body.String(), "Insufficient permissions")

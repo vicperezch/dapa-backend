@@ -82,7 +82,7 @@ type Question struct {
 	Position    int              `json:"position" gorm:"not null;default:1"`
 	Type        QuestionType     `json:"type" gorm:"foreignKey:TypeID"`
 	Options     []QuestionOption `json:"options,omitempty" gorm:"foreignKey:QuestionID"`
-	DeletedAt   gorm.DeletedAt   `json:"deletedAt,omitempty" gorm:"index"`
+	DeletedAt   gorm.DeletedAt   `json:"deletedAt" gorm:"index"`
 }
 
 // Opciones de una pregunta
@@ -90,7 +90,7 @@ type QuestionOption struct {
 	ID         uint           `json:"id" gorm:"primaryKey"`
 	QuestionID uint           `json:"questionId" gorm:"not null" validate:"required,gt=0"`
 	Option     string         `json:"option" gorm:"size:50;not null" validate:"required,question_option"`
-	DeletedAt  gorm.DeletedAt `json:"deletedAt,omitempty" gorm:"index"`
+	DeletedAt  gorm.DeletedAt `json:"deletedAt" gorm:"index"`
 }
 
 // Envío de formulario
@@ -107,28 +107,6 @@ type Answer struct {
 	SubmissionID uint             `json:"submissionId" gorm:"not null" validate:"required,gt=0"`
 	QuestionID   uint             `json:"questionId,omitempty" validate:"omitempty,gt=0"`
 	Answer       *string          `json:"answer,omitempty" validate:"omitempty,max=255"`
-	Question     Question         `json:"question,omitempty" gorm:"foreignKey:QuestionID"`
+	Question     Question         `json:"question" gorm:"foreignKey:QuestionID"`
 	Options      []QuestionOption `json:"options,omitempty" gorm:"many2many:answer_options;"`
-}
-
-type SubmissionStats struct {
-	TotalSubmissions    int64                        `json:"totalSubmissions"`
-	SubmissionsByStatus []StatusCount                `json:"submissionsByStatus"`
-	AnswersByQuestion   []QuestionAnswerDistribution `json:"answersByQuestion"`
-}
-
-type StatusCount struct {
-	Status string `json:"status"`
-	Count  int64  `json:"count"`
-}
-
-type UserCount struct {
-	UserID uint  `json:"userId"`
-	Count  int64 `json:"count"`
-}
-
-type QuestionAnswerDistribution struct {
-	QuestionID uint  `json:"questionId"`
-	OptionID   uint  `json:"optionId"`
-	Count      int64 `json:"count"`
 }

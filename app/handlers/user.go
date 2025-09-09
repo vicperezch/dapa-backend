@@ -19,14 +19,7 @@ import (
 // @Failure		403	{object} model.ApiResponse "Insufficient permissions"
 // @Failure		500	{object} model.ApiResponse "Error fetching users"
 // @Router		/users/ [get]
-func GetUsers(c *gin.Context) {
-	claims := c.MustGet("claims").(*model.EmployeeClaims)
-
-	if claims.Role != "admin" {
-		utils.RespondWithUnathorizedError(c)
-		return
-	}
-
+func GetUsersHandler(c *gin.Context) {
 	var users []model.User
 
 	if err := database.DB.Where("is_active = ?", true).Find(&users).Error; err != nil {
@@ -46,7 +39,7 @@ func GetUsers(c *gin.Context) {
 // @Failure		403	{object} model.ApiResponse "Insufficient permissions"
 // @Failure		500	{object} model.ApiResponse "Error fetching user"
 // @Router		/users/{id} [get]
-func GetUserById(c *gin.Context) {
+func GetUserHandler(c *gin.Context) {
 	var user model.User
 
 	id := c.Param("id")
@@ -74,13 +67,7 @@ func GetUserById(c *gin.Context) {
 // @Failure			404 {object} model.ApiResponse "User not found"
 // @Failure			500 {object} model.ApiResponse "Error updating user"
 // @Router			/users/{id} [put]
-func UpdateUser(c *gin.Context) {
-	claims := c.MustGet("claims").(*model.EmployeeClaims)
-	if claims.Role != "admin" {
-		utils.RespondWithUnathorizedError(c)
-		return
-	}
-
+func UpdateUserHandler(c *gin.Context) {
 	var req model.UserDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
@@ -129,13 +116,7 @@ func UpdateUser(c *gin.Context) {
 // @Failure		    403 {object} model.ApiResponse "Insufficient permissions"
 // @Failure		    500 {object} model.ApiResponse "Error deleting user"
 // @Router			/users/{id} [delete]
-func DeleteUser(c *gin.Context) {
-	claims := c.MustGet("claims").(*model.EmployeeClaims)
-	if claims.Role != "admin" {
-		utils.RespondWithUnathorizedError(c)
-		return
-	}
-
+func DeleteUserHandler(c *gin.Context) {
 	id := c.Param("id")
 
 	err := database.DB.Model(&model.User{}).
