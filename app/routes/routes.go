@@ -53,7 +53,6 @@ func SetupRoutes(router *gin.Engine) {
 
 		// FORMULARIO: Preguntas
 		admin.GET("/questions", handlers.GetQuestionsHandler)
-		admin.GET("/questions-active", handlers.GetActiveQuestionsHandler)
 		admin.POST("/questions", handlers.CreateQuestionHandler)
 		admin.PUT("/questions/:id", handlers.UpdateQuestionHandler)
 		admin.DELETE("/questions/:id", handlers.DeleteQuestionHandler)

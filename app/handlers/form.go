@@ -24,7 +24,6 @@ func GetQuestionTypesHandler(c *gin.Context) {
 }
 
 // ---------- PREGUNTAS ----------
-
 // Crear pregunta
 func CreateQuestionHandler(c *gin.Context) {
 	var req model.QuestionDTO
@@ -71,32 +70,41 @@ func CreateQuestionHandler(c *gin.Context) {
 // Listar preguntas
 func GetQuestionsHandler(c *gin.Context) {
 	var questions []model.Question
-	err := database.DB.
-		Preload("Options").
-		Preload("Type").
-		Order("position ASC").
-		Find(&questions).Error
+	var err error
+
+	statusStr := c.Query("status")
+	if statusStr == "" {
+		err = database.DB.
+			Preload("Options").
+			Preload("Type").
+			Order("position ASC").
+			Find(&questions).Error
+
+	} else {
+		status, err := strconv.ParseBool(statusStr)
+		if err != nil {
+			utils.RespondWithCustomError(
+				c,
+				http.StatusBadRequest,
+				"Status must be of type boolean",
+				"Invalid request format",
+			)
+		}
+
+		err = database.DB.
+			Preload("Options").
+			Preload("Type").
+			Where("is_active = ?", status).
+			Order("position ASC").
+			Find(&questions).Error
+	}
+
 	if err != nil {
 		utils.RespondWithInternalError(c, "Error fetching questions")
 		return
 	}
 
 	utils.RespondWithSuccess(c, http.StatusOK, questions, "Questions fetched successfully")
-}
-
-func GetActiveQuestionsHandler(c *gin.Context) {
-	var activeQuestions []model.Question
-	if err := database.DB.
-		Preload("Options").
-		Preload("Type").
-		Where("is_active = ?", true).
-		Order("position ASC").
-		Find(&activeQuestions).Error; err != nil {
-		utils.RespondWithInternalError(c, "Error fetching active questions")
-		return
-	}
-
-	utils.RespondWithSuccess(c, http.StatusOK, activeQuestions, "Active questions fetched successfully")
 }
 
 // Obtener pregunta por ID
