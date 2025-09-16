@@ -11,8 +11,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ---------- TIPOS DE PREGUNTA ----------
-// Listar tipos de pregunta
+// @Summary		Get all question types available in the system
+// @Description	Returns a list of all question types
+// @Tags		form
+// @Produce		json
+// @Success		200	{object} model.ApiResponse "List of question types"
+// @Failure		500	{object} model.ApiResponse "Error fetching question types"
+// @Router		/form/question-types [get]
 func GetQuestionTypesHandler(c *gin.Context) {
 	var types []model.QuestionType
 	if err := database.DB.Find(&types).Error; err != nil {
@@ -23,8 +28,15 @@ func GetQuestionTypesHandler(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusOK, types, "Fetched question types successfully")
 }
 
-// ---------- PREGUNTAS ----------
-// Crear pregunta
+// @Summary		Create a new question for the form
+// @Description	Creates a new question to display on the client form
+// @Tags		form
+// @Produce		json
+// @Param       question body model.QuestionDTO true "Question information"
+// @Success		200	{object} model.ApiResponse "Returns the data of the newly created question"
+// @Failure     400 {object} model.ApiResponse "Invalid request format"
+// @Failure		500	{object} model.ApiResponse "Error creating question"
+// @Router		/form/questions [post]
 func CreateQuestionHandler(c *gin.Context) {
 	var req model.QuestionDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -67,12 +79,20 @@ func CreateQuestionHandler(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusCreated, q, "Question created successfully")
 }
 
-// Listar preguntas
+// @Summary		Get all created questions
+// @Description	Fetches all questions in the form
+// @Tags		form
+// @Produce		json
+// @Param       active query boolean false "question status (is active)"
+// @Success		200	{object} model.ApiResponse "Returns all questions with the filter applied"
+// @Failure     400 {object} model.ApiResponse "The active filter must be of type boolean"
+// @Failure		500	{object} model.ApiResponse "Error fetching questions"
+// @Router		/form/questions [get]
 func GetQuestionsHandler(c *gin.Context) {
 	var questions []model.Question
 	var err error
 
-	statusStr := c.Query("status")
+	statusStr := c.Query("active")
 	if statusStr == "" {
 		err = database.DB.
 			Preload("Options").
@@ -86,7 +106,7 @@ func GetQuestionsHandler(c *gin.Context) {
 			utils.RespondWithCustomError(
 				c,
 				http.StatusBadRequest,
-				"Status must be of type boolean",
+				"Active filter must be of type boolean",
 				"Invalid request format",
 			)
 		}
@@ -107,7 +127,14 @@ func GetQuestionsHandler(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusOK, questions, "Questions fetched successfully")
 }
 
-// Obtener pregunta por ID
+// @Summary		Get one form question
+// @Description	Fetches the question with the specified ID
+// @Tags		form
+// @Produce		json
+// @Param		id path int true "Question ID"
+// @Success		200	{object} model.ApiResponse "Returns the required question"
+// @Failure		500	{object} model.ApiResponse "Error fetching question"
+// @Router		/form/questions/{id} [get]
 func GetQuestionHandler(c *gin.Context) {
 	id := c.Param("id")
 	var question model.Question
@@ -127,7 +154,16 @@ func GetQuestionHandler(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusOK, question, "Question fetched successfully")
 }
 
-// Actualizar pregunta
+// @Summary		Updates one question in the system
+// @Description	Updates the specified question with the information provided
+// @Tags		form
+// @Produce		json
+// @Param		id path int true "Question ID"
+// @Param		question body model.QuestionDTO true "Updated question information"
+// @Success		200	{object} model.ApiResponse "Question successfully updated"
+// @Failure     400 {object} model.ApiResponse "Invalid request format"
+// @Failure		500	{object} model.ApiResponse "Error updating question"
+// @Router		/form/questions/{id} [put]
 func UpdateQuestionHandler(c *gin.Context) {
 	id := c.Param("id")
 	var req model.QuestionDTO
@@ -272,7 +308,15 @@ func UpdateQuestionHandler(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusOK, nil, "Question updated")
 }
 
-// Reordenar preguntas (intercambiar posiciones)
+// @Summary		Changes the position of two questions
+// @Description	Updates the order in which the questions appear in the form
+// @Tags		form
+// @Produce		json
+// @Param		question body model.ReorderQuestionDTO true "Questions information"
+// @Success		200	{object} model.ApiResponse "Questions successfully reordered"
+// @Failure     400 {object} model.ApiResponse "Invalid request format"
+// @Failure		500	{object} model.ApiResponse "Error reordering questions"
+// @Router		/form/questions/reorder [patch]
 func ReorderQuestionsHandler(c *gin.Context) {
 	var req model.ReorderQuestionDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -339,6 +383,16 @@ func ReorderQuestionsHandler(c *gin.Context) {
 	)
 }
 
+// @Summary		Changes the status of one question
+// @Description	Sets the question active or inactive
+// @Tags		form
+// @Produce		json
+// @Param		id path int true "Question ID"
+// @Success		200	{object} model.ApiResponse "Question status changed"
+// @Failure     400 {object} model.ApiResponse "Invalid request format"
+// @Failure     404 {object} model.ApiResponse "Question not found"
+// @Failure		500	{object} model.ApiResponse "Error updating question"
+// @Router		/form/questions/{id}/active [patch]
 func ToggleQuestionActiveHandler(c *gin.Context) {
 	id := c.Param("id")
 
@@ -363,7 +417,14 @@ func ToggleQuestionActiveHandler(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusOK, nil, "Question updated successfully")
 }
 
-// Eliminar pregunta
+// @Summary		Deletes one question
+// @Description	Soft deletes the specifiec question
+// @Tags		form
+// @Produce		json
+// @Param		id path int true "Question ID"
+// @Success		200	{object} model.ApiResponse "Question successfully deleted"
+// @Failure		500	{object} model.ApiResponse "Error deleting question"
+// @Router		/form/questions/{id} [delete]
 func DeleteQuestionHandler(c *gin.Context) {
 	id := c.Param("id")
 
@@ -375,9 +436,15 @@ func DeleteQuestionHandler(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusOK, nil, "Question deleted")
 }
 
-// ---------- OPCIONES DE PREGUNTA ----------
-
-// Crear opción
+// @Summary		Creates an option for one form question
+// @Description	Sets a new possible option to be selected in the client form for one question
+// @Tags		form
+// @Produce		json
+// @Param		id path int true "Question ID"
+// @Success		200	{object} model.ApiResponse "Option successfully created"
+// @Failure		400	{object} model.ApiResponse "Invalid request format"
+// @Failure		500	{object} model.ApiResponse "Error creating question option"
+// @Router		/form/questions/{id}/options [post]
 func CreateQuestionOptionHandler(c *gin.Context) {
 	var req model.QuestionOptionDTO
 	questionID, err := strconv.Atoi(c.Param("questionId"))
@@ -399,9 +466,14 @@ func CreateQuestionOptionHandler(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusCreated, option, "Question option created successfully")
 }
 
-// ---------- ENVÍOS DE FORMULARIO ----------
-
-// Crear envio
+// @Summary		Creates a form submission
+// @Description	Creates a new set of responses for the client form
+// @Tags		form
+// @Produce		json
+// @Success		200	{object} model.ApiResponse "Submission successfully created"
+// @Failure		400	{object} model.ApiResponse "Invalid request format"
+// @Failure		500	{object} model.ApiResponse "Error creating submission"
+// @Router		/form/submissions [post]
 func CreateSubmissionHandler(c *gin.Context) {
 	var req model.CreateSubmissionDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -447,7 +519,13 @@ func CreateSubmissionHandler(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusCreated, submission, "Submission created")
 }
 
-// Listar envíos
+// @Summary		Gets all form submissions
+// @Description	Fetches all the created submissions
+// @Tags		form
+// @Produce		json
+// @Success		200	{object} model.ApiResponse "Submissions fetched successfully"
+// @Failure		500	{object} model.ApiResponse "Error fetching submissions"
+// @Router		/form/submissions [get]
 func GetSubmissionsHandler(c *gin.Context) {
 	var submissions []model.Submission
 
@@ -465,7 +543,14 @@ func GetSubmissionsHandler(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusOK, submissions, "Submissions fetched successfully")
 }
 
-// GetSubmissionByID obtiene una submission con sus respuestas, preguntas y opciones asociadas
+// @Summary		Gets a form submission
+// @Description	Fetches the submission with the specified ID
+// @Tags		form
+// @Produce		json
+// @Param		id path int true "Submission ID"
+// @Success		200	{object} model.ApiResponse "Submission fetched successfully"
+// @Failure		500	{object} model.ApiResponse "Error fetching submission"
+// @Router		/form/submissions/{id} [get]
 func GetSubmissionHandler(c *gin.Context) {
 	id := c.Param("id")
 
@@ -484,7 +569,15 @@ func GetSubmissionHandler(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusOK, submission, "Submission fetched successfully")
 }
 
-// Actualizar estado de envío
+// @Summary		Updates a submission status
+// @Description	Changes the submission status to the specifiec one
+// @Tags		form
+// @Produce		json
+// @Param		id path int true "Submission ID"
+// @Success		200	{object} model.ApiResponse "Submission updated successfully"
+// @Failure		400	{object} model.ApiResponse "Invalid request format"
+// @Failure		500	{object} model.ApiResponse "Error updating submission"
+// @Router		/form/submissions/{id}/status [put]
 func UpdateSubmissionStatusHandler(c *gin.Context) {
 	id := c.Param("id")
 	var req model.UpdateSubmissionStatusDTO

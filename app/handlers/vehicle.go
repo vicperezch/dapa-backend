@@ -68,7 +68,7 @@ func GetVehicleHandler(c *gin.Context) {
 // @Accept		json
 // @Produce		json
 // @Param		id path int true "Vehicle ID"
-// @Param		vehicle body model.UpdateVehicleRequest true "Updated vehicle information"
+// @Param		vehicle body model.VehicleDTO true "Updated vehicle information"
 // @Success		200	{object} model.ApiResponse "Successfully updated vehicle"
 // @Failure		400	{object} model.ApiResponse "Invalid request format"
 // @Failure		500	{object} model.ApiResponse "Error updating vehicle"
@@ -118,7 +118,7 @@ func UpdateVehicleHandler(c *gin.Context) {
 // @Tags		vehicles
 // @Accept		json
 // @Produce		json
-// @Param		vehicle body model.CreateVehicleRequest true "Vehicle information to create"
+// @Param		vehicle body model.VehicleDTO true "Vehicle information to create"
 // @Success		200	{object} model.ApiResponse "Successfully created vehile"
 // @Failure		400	{object} model.ApiResponse "Invalid request format"
 // @Failure		500	{object} model.ApiResponse "Error creating new vehicle"

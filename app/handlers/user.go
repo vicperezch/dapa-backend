@@ -60,7 +60,7 @@ func GetUserHandler(c *gin.Context) {
 // @Accept			json
 // @Produce			json
 // @Param			id path int true "User ID"
-// @Param			user body model.UpdateUserRequest true "Updated user information"
+// @Param			user body model.UserDTO true "Updated user information"
 // @Success			200 {object} model.ApiResponse "User updated successfully"
 // @Failure			400 {object} model.ApiResponse "Invalid request format"
 // @Failure			403 {object} model.ApiResponse "Insufficient permissions"

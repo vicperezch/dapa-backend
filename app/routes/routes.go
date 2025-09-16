@@ -49,23 +49,23 @@ func SetupRoutes(router *gin.Engine) {
 		admin.PATCH("/orders/:id", handlers.AssignOrderHandler)
 
 		// FORMULARIO: Tipos de pregunta
-		admin.GET("/question-types", handlers.GetQuestionTypesHandler)
+		admin.GET("form/question-types", handlers.GetQuestionTypesHandler)
 
 		// FORMULARIO: Preguntas
-		admin.GET("/questions", handlers.GetQuestionsHandler)
-		admin.POST("/questions", handlers.CreateQuestionHandler)
-		admin.PUT("/questions/:id", handlers.UpdateQuestionHandler)
-		admin.DELETE("/questions/:id", handlers.DeleteQuestionHandler)
-		admin.PATCH("/questions/reorder", handlers.ReorderQuestionsHandler)
-		admin.PATCH("/questions/:id/active", handlers.ToggleQuestionActiveHandler)
+		admin.GET("form/questions", handlers.GetQuestionsHandler)
+		admin.POST("form/questions", handlers.CreateQuestionHandler)
+		admin.PUT("form/questions/:id", handlers.UpdateQuestionHandler)
+		admin.DELETE("form/questions/:id", handlers.DeleteQuestionHandler)
+		admin.PATCH("form/questions/reorder", handlers.ReorderQuestionsHandler)
+		admin.PATCH("form/questions/:id/active", handlers.ToggleQuestionActiveHandler)
 
 		// FORMULARIO: Opciones de pregunta
-		admin.POST("/questions/:questionId/options", handlers.CreateQuestionOptionHandler)
+		admin.POST("form/questions/:questionId/options", handlers.CreateQuestionOptionHandler)
 
 		// FORMULARIO: Envíos (admin puede ver y actualizar estado)
-		admin.GET("/submissions", handlers.GetSubmissionsHandler)
-		admin.POST("/submissions", handlers.CreateSubmissionHandler)
-		admin.GET("/submissions/:id", handlers.GetSubmissionHandler)
-		admin.PUT("/submissions/:id/status", handlers.UpdateSubmissionStatusHandler)
+		admin.GET("form/submissions", handlers.GetSubmissionsHandler)
+		admin.POST("form/submissions", handlers.CreateSubmissionHandler)
+		admin.GET("form/submissions/:id", handlers.GetSubmissionHandler)
+		admin.PUT("form/submissions/:id/status", handlers.UpdateSubmissionStatusHandler)
 	}
 }
