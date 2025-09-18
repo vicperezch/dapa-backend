@@ -47,11 +47,18 @@ type VehicleDTO struct {
 type OrderDTO struct {
 	UserID      *uint   `json:"userId"`
 	VehicleID   *uint   `json:"vehicleId"`
+	ClientName  string  `json:"clientName" binding:"required"`
+	ClientPhone string  `json:"clientPhone" binding:"required"`
 	Origin      string  `json:"origin" binding:"required"`
 	Destination string  `json:"destination" binding:"required"`
 	TotalAmount float64 `json:"totalAmount" binding:"required"`
 	Details     *string `json:"details"`
 	Type        string  `json:"type" binding:"required"`
+}
+
+type AcceptSubmissionDTO struct {
+	OrderDTO
+	SubmissionID uint `json:"submissionId" binding:"required"`
 }
 
 type AssignOrderDTO struct {

@@ -1,20 +1,76 @@
 package handlers
 
 import (
+	"context"
 	"dapa/app/model"
 	"dapa/app/utils"
 	"dapa/database"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
+
+// @Summary		Creates and order from a submission
+// @Description	Changes a submission status and creates a new order with the information provided
+// @Tags		orders
+// @Produce		json
+// @Param		order body model.AcceptSubmissionDTO true "Order information"
+// @Success		200	{object} model.ApiResponse "Order successfully created"
+// @Failure		400	{object} model.ApiResponse "Invalid request format"
+// @Failure		500	{object} model.ApiResponse "Error creating order"
+// @Router		/orders/ [post]
+func CreateOrderHandler(c *gin.Context) {
+	var req model.AcceptSubmissionDTO
+	var err error
+
+	err = c.ShouldBindJSON(&req)
+	if err != nil {
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
+		return
+	}
+
+	ctx := context.Background()
+	err = database.DB.Transaction(func(tx *gorm.DB) error {
+		_, txErr := gorm.G[model.Submission](tx).Where("id = ?", req.SubmissionID).Update(ctx, "status", "approved")
+		if txErr != nil {
+			return txErr
+		}
+
+		order := model.Order{
+			SubmissionID: req.SubmissionID,
+			ClientName:   req.ClientName,
+			ClientPhone:  req.ClientPhone,
+			Origin:       req.Origin,
+			Destination:  req.Destination,
+			TotalAmount:  req.TotalAmount,
+			Details:      req.Details,
+			Type:         req.Type,
+			Date:         time.Now(),
+		}
+		txErr = gorm.G[model.Order](tx).Create(ctx, &order)
+		if txErr != nil {
+			return txErr
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error creating order")
+		return
+	}
+
+	utils.RespondWithSuccess(c, http.StatusCreated, nil, "Order successfully created")
+}
 
 // @Summary		Get all orders in the system
 // @Description	Returns a list of all orders, if the user is a driver it returns only their associated orders
 // @Tags		orders
 // @Produce		json
 // @Param       status query string false "Order status"
-// @Success		200	{array} model.Order "List of orders"
+// @Success		200	{object} model.ApiResponse "List of orders"
 // @Failure		500	{object} model.ApiResponse "Error retrieving orders"
 // @Router		/orders/ [get]
 func GetOrdersHandler(c *gin.Context) {
@@ -55,7 +111,7 @@ func GetOrdersHandler(c *gin.Context) {
 // @Tags		orders
 // @Produce		json
 // @Param       id path int true "Order ID"
-// @Success		200	{object} model.Order "Order"
+// @Success		200	{object} model.ApiResponse "Order"
 // @Failure		403	{object} model.ApiResponse "Insufficient permissions"
 // @Failure		500	{object} model.ApiResponse "Error retrieving order"
 // @Router		/orders/{id} [get]
@@ -77,6 +133,7 @@ func GetOrderHandler(c *gin.Context) {
 // @Tags		orders
 // @Produce		json
 // @Param       id path int true "Order ID"
+// @Param		order body model.OrderDTO true "Updated order information"
 // @Success		200	{object} model.ApiResponse "Order updated successfully"
 // @Failure		400 {object} model.ApiResponse "Invalid request format"
 // @Failure		403 {object} model.ApiResponse "Insufficient permissions"
@@ -105,6 +162,8 @@ func UpdateOrderHandler(c *gin.Context) {
 		return
 	}
 
+	order.ClientName = req.ClientName
+	order.ClientPhone = req.ClientPhone
 	order.Origin = req.Origin
 	order.Destination = req.Destination
 	order.TotalAmount = req.TotalAmount

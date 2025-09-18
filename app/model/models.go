@@ -56,6 +56,8 @@ type Order struct {
 	SubmissionID uint      `json:"submissionId" gorm:"column:submission_id;not null;unique"`
 	UserID       uint      `json:"userId,omitempty" gorm:"column:user_id"`
 	VehicleID    uint      `json:"vehicleId,omitempty" gorm:"column:vehicle_id"`
+	ClientName   string    `json:"clientName" gorm:"column:client_name;size:50"`
+	ClientPhone  string    `json:"clientPhone" gorm:"column:client_phone;size:15"`
 	Origin       string    `json:"origin" gorm:"size:100;not null"`
 	Destination  string    `json:"destination" gorm:"size:100;not null"`
 	TotalAmount  float64   `json:"totalAmount" gorm:"column:total_amount;not null"`

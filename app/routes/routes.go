@@ -44,6 +44,7 @@ func SetupRoutes(router *gin.Engine) {
 		admin.DELETE("/vehicles/:id", handlers.DeleteVehicleHandler)
 
 		// ENTIDADES: Órdenes
+		admin.POST("/orders", handlers.CreateOrderHandler)
 		admin.GET("/orders/:id", handlers.GetOrderHandler)
 		admin.PUT("/orders/:id", handlers.UpdateOrderHandler)
 		admin.PATCH("/orders/:id", handlers.AssignOrderHandler)
@@ -66,6 +67,6 @@ func SetupRoutes(router *gin.Engine) {
 		admin.GET("form/submissions", handlers.GetSubmissionsHandler)
 		admin.POST("form/submissions", handlers.CreateSubmissionHandler)
 		admin.GET("form/submissions/:id", handlers.GetSubmissionHandler)
-		admin.PUT("form/submissions/:id/status", handlers.UpdateSubmissionStatusHandler)
+		admin.PATCH("form/submissions/:id/status", handlers.UpdateSubmissionStatusHandler)
 	}
 }
