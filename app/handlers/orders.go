@@ -206,7 +206,7 @@ func UpdateOrderHandler(c *gin.Context) {
 // @Failure		403 {object} model.ApiResponse "Insufficient permissions"
 // @Failure		404 {object} model.ApiResponse "Order not found"
 // @Failure		500 {object} model.ApiResponse "Error assigning order"
-// @Router		/orders/{id} [patch]
+// @Router		/orders/{id}/assign [patch]
 func AssignOrderHandler(c *gin.Context) {
 	var req model.AssignOrderDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -239,4 +239,35 @@ func AssignOrderHandler(c *gin.Context) {
 	}
 
 	utils.RespondWithSuccess(c, http.StatusOK, nil, "Order assigned successfully")
+}
+
+// @Summary		Changes and order's status
+// @Description	Updates the order's data to the provided status
+// @Tags		orders
+// @Produce		json
+// @Param       id path int true "Order ID"
+// @Param		status body model.OrderStatusDTO true "Updated order status"
+// @Success		200	{object} model.ApiResponse "Order status updated successfully"
+// @Failure		400 {object} model.ApiResponse "Invalid request format"
+// @Failure		500 {object} model.ApiResponse "Error updating order status"
+// @Router		/orders/{id}/status [patch]
+func ChangeOrderStatusHandler(c *gin.Context) {
+	var req model.OrderStatusDTO
+	var err error
+
+	id := c.Param("id")
+	err = c.ShouldBindJSON(&req)
+	if err != nil {
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
+		return
+	}
+
+	ctx := context.Background()
+	_, err = gorm.G[model.Order](database.DB).Where("id = ?", id).Update(ctx, "status", req.Status)
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error updating order status")
+		return
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "Order status updated successfully")
 }

@@ -2,30 +2,6 @@ package model
 
 import "time"
 
-type LoginDTO struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,password"`
-}
-
-type RegisterDTO struct {
-	Name                  string    `json:"name" binding:"required"`
-	LastName              string    `json:"lastName" binding:"required"`
-	Phone                 string    `json:"phone" binding:"required,phone"`
-	Email                 string    `json:"email" binding:"required,email"`
-	LicenseExpirationDate time.Time `json:"licenseExpirationDate" binding:"required_if=Role driver"`
-	Password              string    `json:"password" binding:"required,password"`
-	Role                  string    `json:"role" binding:"required,oneof=admin driver"`
-}
-
-type ForgotPasswordDTO struct {
-	Email string `json:"email" binding:"required,email"`
-}
-
-type ResetPasswordDTO struct {
-	Token       string `json:"token" binding:"required"`
-	NewPassword string `json:"newPassword" binding:"required,password"`
-}
-
 type UserDTO struct {
 	Name                  string    `json:"name" binding:"required"`
 	LastName              string    `json:"lastName" binding:"required"`
@@ -56,6 +32,30 @@ type OrderDTO struct {
 	Type        string  `json:"type" binding:"required"`
 }
 
+type LoginDTO struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,password"`
+}
+
+type RegisterDTO struct {
+	Name                  string    `json:"name" binding:"required"`
+	LastName              string    `json:"lastName" binding:"required"`
+	Phone                 string    `json:"phone" binding:"required,phone"`
+	Email                 string    `json:"email" binding:"required,email"`
+	LicenseExpirationDate time.Time `json:"licenseExpirationDate" binding:"required_if=Role driver"`
+	Password              string    `json:"password" binding:"required,password"`
+	Role                  string    `json:"role" binding:"required,oneof=admin driver"`
+}
+
+type ForgotPasswordDTO struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+type ResetPasswordDTO struct {
+	Token       string `json:"token" binding:"required"`
+	NewPassword string `json:"newPassword" binding:"required,password"`
+}
+
 type AcceptSubmissionDTO struct {
 	OrderDTO
 	SubmissionID uint `json:"submissionId" binding:"required"`
@@ -64,6 +64,10 @@ type AcceptSubmissionDTO struct {
 type AssignOrderDTO struct {
 	UserID    uint `json:"userId" binding:"required"`
 	VehicleID uint `json:"vehicleId" binding:"required"`
+}
+
+type OrderStatusDTO struct {
+	Status string `json:"status" binding:"oneof=pending assigned pickup collected delivered"`
 }
 
 type QuestionTypeDTO struct {

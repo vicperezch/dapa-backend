@@ -47,7 +47,8 @@ func SetupRoutes(router *gin.Engine) {
 		// ENTIDADES: Órdenes
 		admin.POST("/orders", handlers.CreateOrderHandler)
 		admin.PUT("/orders/:id", handlers.UpdateOrderHandler)
-		admin.PATCH("/orders/:id", handlers.AssignOrderHandler)
+		admin.PATCH("/orders/:id/assign", handlers.AssignOrderHandler)
+		admin.PATCH("/orders/:id/status", handlers.ChangeOrderStatusHandler)
 
 		// FORMULARIO: Tipos de pregunta
 		admin.GET("form/question-types", handlers.GetQuestionTypesHandler)
