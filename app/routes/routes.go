@@ -26,6 +26,7 @@ func SetupRoutes(router *gin.Engine) {
 		protected.GET("/users/:id", handlers.GetUserHandler)
 
 		protected.GET("/orders", handlers.GetOrdersHandler)
+		protected.GET("/orders/:id", handlers.GetOrderHandler)
 	}
 
 	admin := protected.Group("")
@@ -45,7 +46,6 @@ func SetupRoutes(router *gin.Engine) {
 
 		// ENTIDADES: Órdenes
 		admin.POST("/orders", handlers.CreateOrderHandler)
-		admin.GET("/orders/:id", handlers.GetOrderHandler)
 		admin.PUT("/orders/:id", handlers.UpdateOrderHandler)
 		admin.PATCH("/orders/:id", handlers.AssignOrderHandler)
 

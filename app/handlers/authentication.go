@@ -87,7 +87,7 @@ func LoginHandler(c *gin.Context) {
 		Where("email = ? AND is_active = ?", req.Email, true).
 		First(&user).Error
 
-	if err != nil || utils.CheckPassword(req.Password, user.PasswordHash) {
+	if err != nil || !utils.CheckPassword(req.Password, user.PasswordHash) {
 		utils.RespondWithCustomError(
 			c,
 			http.StatusUnauthorized,

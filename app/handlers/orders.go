@@ -117,11 +117,17 @@ func GetOrdersHandler(c *gin.Context) {
 // @Router		/orders/{id} [get]
 func GetOrderHandler(c *gin.Context) {
 	var order model.Order
+	claims := c.MustGet("claims").(*model.EmployeeClaims)
 
 	id := c.Param("id")
 	err := database.DB.Where("id = ?", id).First(&order).Error
 	if err != nil {
 		utils.RespondWithInternalError(c, "Error fetching order")
+		return
+	}
+
+	if claims.Role == "driver" && order.UserID != claims.UserID {
+		utils.RespondWithUnathorizedError(c)
 		return
 	}
 
