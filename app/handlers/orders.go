@@ -38,16 +38,21 @@ func CreateOrderHandler(c *gin.Context) {
 			return txErr
 		}
 
+		currentDate := time.Now().Truncate(24 * time.Hour)
+
 		order := model.Order{
 			SubmissionID: req.SubmissionID,
+			UserID:       nil,
+			VehicleID:    nil,
 			ClientName:   req.ClientName,
 			ClientPhone:  req.ClientPhone,
 			Origin:       req.Origin,
 			Destination:  req.Destination,
 			TotalAmount:  req.TotalAmount,
 			Details:      req.Details,
+			Status:       "pending",
 			Type:         req.Type,
-			Date:         time.Now(),
+			Date:         currentDate,
 		}
 		txErr = gorm.G[model.Order](tx).Create(ctx, &order)
 		if txErr != nil {
@@ -126,7 +131,7 @@ func GetOrderHandler(c *gin.Context) {
 		return
 	}
 
-	if claims.Role == "driver" && order.UserID != claims.UserID {
+	if claims.Role == "driver" && (order.UserID == nil || *order.UserID != claims.UserID) {
 		utils.RespondWithUnathorizedError(c)
 		return
 	}
@@ -176,15 +181,15 @@ func UpdateOrderHandler(c *gin.Context) {
 	order.Type = req.Type
 
 	if req.UserID != nil {
-		order.UserID = *req.UserID
+		order.UserID = req.UserID
 	}
 
 	if req.VehicleID != nil {
-		order.VehicleID = *req.VehicleID
+		order.VehicleID = req.VehicleID
 	}
 
 	if req.Details != nil {
-		order.Details = req.Details
+		order.Details = *req.Details
 	}
 
 	err = database.DB.Save(&order).Error
@@ -229,8 +234,9 @@ func AssignOrderHandler(c *gin.Context) {
 		return
 	}
 
-	order.UserID = req.UserID
-	order.VehicleID = req.VehicleID
+	order.UserID = &req.UserID
+	order.VehicleID = &req.VehicleID
+	order.Status = "assigned"
 
 	err = database.DB.Save(&order).Error
 	if err != nil {

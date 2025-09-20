@@ -52,19 +52,19 @@ type ResetToken struct {
 }
 
 type Order struct {
-	ID           uint      `json:"id" gorm:"primaryKey"`
-	SubmissionID uint      `json:"submissionId" gorm:"column:submission_id;not null;unique"`
-	UserID       uint      `json:"userId,omitempty" gorm:"column:user_id"`
-	VehicleID    uint      `json:"vehicleId,omitempty" gorm:"column:vehicle_id"`
-	ClientName   string    `json:"clientName" gorm:"column:client_name;size:50"`
-	ClientPhone  string    `json:"clientPhone" gorm:"column:client_phone;size:15"`
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	SubmissionID uint      `json:"submissionId"`
+	UserID       *uint     `json:"userId,omitempty" gorm:"default:null"`
+	VehicleID    *uint     `json:"vehicleId,omitempty" gorm:"default:null"`
+	ClientName   string    `json:"clientName"`
+	ClientPhone  string    `json:"clientPhone"`
 	Origin       string    `json:"origin" gorm:"size:100;not null"`
 	Destination  string    `json:"destination" gorm:"size:100;not null"`
-	TotalAmount  float64   `json:"totalAmount" gorm:"column:total_amount;not null"`
-	Details      *string   `json:"details,omitempty"`
-	Status       string    `json:"status" gorm:"not null"`
+	TotalAmount  float64   `json:"totalAmount" gorm:"not null"`
+	Details      string    `json:"details"`
+	Status       string    `json:"status" gorm:"default:pending"`
 	Type         string    `json:"type" gorm:"not null"`
-	Date         time.Time `json:"date" gorm:"not null"`
+	Date         time.Time `json:"date" gorm:"type:date"`
 }
 
 // ******************** FORMULARIO ********************
@@ -95,7 +95,7 @@ type QuestionOption struct {
 	DeletedAt  gorm.DeletedAt `json:"deletedAt" gorm:"index"`
 }
 
-// Envío de formulario
+// EnvÃ­o de formulario
 type Submission struct {
 	ID          uint       `json:"id" gorm:"primaryKey"`
 	SubmittedAt time.Time  `json:"submittedAt" gorm:"default:CURRENT_TIMESTAMP"`

@@ -57,8 +57,14 @@ type ResetPasswordDTO struct {
 }
 
 type AcceptSubmissionDTO struct {
-	OrderDTO
-	SubmissionID uint `json:"submissionId" binding:"required"`
+	SubmissionID uint    `json:"submissionId" binding:"required"`
+	ClientName   string  `json:"clientName" binding:"required"`
+	ClientPhone  string  `json:"clientPhone" binding:"required"`
+	Origin       string  `json:"origin" binding:"required"`
+	Destination  string  `json:"destination" binding:"required"`
+	TotalAmount  float64 `json:"totalAmount" binding:"required"`
+	Details      string  `json:"details" binding:"required"`
+	Type         string  `json:"type" binding:"required"`
 }
 
 type AssignOrderDTO struct {
@@ -89,8 +95,8 @@ type QuestionDTO struct {
 }
 
 type ReorderQuestionDTO struct {
-	SourceID uint `json:"sourceId" binding:"required"` // pregunta arrastrada
-	TargetID uint `json:"targetId" binding:"required"` // pregunta en la posición destino
+	SourceID uint `json:"sourceId" binding:"required"`
+	TargetID uint `json:"targetId" binding:"required"`
 }
 
 type AnswerDTO struct {
