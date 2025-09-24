@@ -102,7 +102,7 @@ func GetOrdersHandler(c *gin.Context) {
 		return
 	}
 
-	err = database.DB.Where("user_id = ?", claims.ID).Find(&orders).Error
+	err = database.DB.Where("user_id = ?", claims.UserID).Find(&orders).Error
 	if err != nil {
 		utils.RespondWithInternalError(c, "Error fetching orders")
 		return

@@ -16,6 +16,9 @@ func SetupRoutes(router *gin.Engine) {
 	api.POST("/auth/forgot", handlers.ForgotPasswordHandler)
 	api.POST("/auth/reset", handlers.ResetPasswordHandler)
 
+	api.GET("form/questions", handlers.GetQuestionsHandler)
+	api.POST("form/submissions", handlers.CreateSubmissionHandler)
+
 	// Protected routes - require valid JWT token
 	protected := api.Group("")
 	protected.Use(middlewares.AuthMiddleware())
@@ -27,6 +30,7 @@ func SetupRoutes(router *gin.Engine) {
 
 		protected.GET("/orders", handlers.GetOrdersHandler)
 		protected.GET("/orders/:id", handlers.GetOrderHandler)
+		protected.PATCH("/orders/:id/status", handlers.ChangeOrderStatusHandler)
 	}
 
 	admin := protected.Group("")
@@ -48,13 +52,11 @@ func SetupRoutes(router *gin.Engine) {
 		admin.POST("/orders", handlers.CreateOrderHandler)
 		admin.PUT("/orders/:id", handlers.UpdateOrderHandler)
 		admin.PATCH("/orders/:id/assign", handlers.AssignOrderHandler)
-		admin.PATCH("/orders/:id/status", handlers.ChangeOrderStatusHandler)
 
 		// FORMULARIO: Tipos de pregunta
 		admin.GET("form/question-types", handlers.GetQuestionTypesHandler)
 
 		// FORMULARIO: Preguntas
-		admin.GET("form/questions", handlers.GetQuestionsHandler)
 		admin.POST("form/questions", handlers.CreateQuestionHandler)
 		admin.PUT("form/questions/:id", handlers.UpdateQuestionHandler)
 		admin.DELETE("form/questions/:id", handlers.DeleteQuestionHandler)
@@ -66,7 +68,6 @@ func SetupRoutes(router *gin.Engine) {
 
 		// FORMULARIO: Envíos (admin puede ver y actualizar estado)
 		admin.GET("form/submissions", handlers.GetSubmissionsHandler)
-		admin.POST("form/submissions", handlers.CreateSubmissionHandler)
 		admin.GET("form/submissions/:id", handlers.GetSubmissionHandler)
 		admin.PATCH("form/submissions/:id/status", handlers.UpdateSubmissionStatusHandler)
 	}
