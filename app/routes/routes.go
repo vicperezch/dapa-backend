@@ -31,6 +31,8 @@ func SetupRoutes(router *gin.Engine) {
 		protected.GET("/orders", handlers.GetOrdersHandler)
 		protected.GET("/orders/:id", handlers.GetOrderHandler)
 		protected.PATCH("/orders/:id/status", handlers.ChangeOrderStatusHandler)
+
+		protected.GET("form/submissions/:id", handlers.GetSubmissionHandler)
 	}
 
 	admin := protected.Group("")
@@ -68,7 +70,6 @@ func SetupRoutes(router *gin.Engine) {
 
 		// FORMULARIO: Envíos (admin puede ver y actualizar estado)
 		admin.GET("form/submissions", handlers.GetSubmissionsHandler)
-		admin.GET("form/submissions/:id", handlers.GetSubmissionHandler)
 		admin.PATCH("form/submissions/:id/status", handlers.UpdateSubmissionStatusHandler)
 	}
 }
