@@ -15,8 +15,7 @@ import (
 
 var DB *gorm.DB
 
-// ConnectToDatabase initializes the connection to the PostgreSQL database using GORM,
-// then applies any pending migrations.
+// Inicializa la conexión a la base de datos PostgreSQL
 func ConnectToDatabase() {
 	dsn := "host=database user=" + utils.EnvMustGet("POSTGRES_USER") +
 		" password=" + utils.EnvMustGet("POSTGRES_PASSWORD") +
@@ -31,8 +30,7 @@ func ConnectToDatabase() {
 	migrateDatabase()
 }
 
-// migrateDatabase runs SQL migration scripts from the migrations folder
-// to keep the database schema up to date.
+// Aplica las migraciones necesarias a la base de datos
 func migrateDatabase() {
 	dbURL := "postgres://" + utils.EnvMustGet("POSTGRES_USER") +
 		":" + utils.EnvMustGet("POSTGRES_PASSWORD") +
@@ -52,4 +50,3 @@ func migrateDatabase() {
 		log.Fatal("Failed to migrate DB:", err)
 	}
 }
-

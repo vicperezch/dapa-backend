@@ -8,12 +8,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// jwtSecret holds the secret key used for signing JWT tokens.
-// It is loaded from the environment variable JWT_SECRET.
 var jwtSecret = []byte(EnvMustGet("JWT_SECRET"))
 
-// GenerateToken creates a JWT token for the given employee.
-// The token includes employee details as claims and expires after 24 hours.
+// Genera un token JWT para un usuario
+// Recibe el usuario como parámetro
+// Retorna el token como string
 func GenerateToken(user *model.User) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 
@@ -32,8 +31,9 @@ func GenerateToken(user *model.User) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-// ValidateToken parses and validates a JWT token string.
-// It returns the EmployeeClaims if the token is valid, or an error otherwise.
+// Determina si un token JWT es válido
+// Retorna las claims si es válido
+// Retorna un error si no lo es
 func ValidateToken(tokenString string) (*model.EmployeeClaims, error) {
 	claims := &model.EmployeeClaims{}
 
@@ -54,4 +54,3 @@ func ValidateToken(tokenString string) (*model.EmployeeClaims, error) {
 
 	return claims, nil
 }
-

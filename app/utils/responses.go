@@ -9,8 +9,8 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// RespondWithJSON sends a JSON response with HTTP status 200 (OK).
-// The payload parameter can be any data structure to be sent as JSON.
+// Envía una respuesta en JSON en caso de éxito
+// Recibe el código HTTP, la información y el mensaje a enviar
 func RespondWithSuccess(c *gin.Context, status int, data any, message string) {
 	c.JSON(status, model.ApiResponse{
 		Success: true,
@@ -20,8 +20,8 @@ func RespondWithSuccess(c *gin.Context, status int, data any, message string) {
 	})
 }
 
-// RespondWithError sends a JSON response with a custom HTTP status code.
-// The response contains a success flag set to false and an error message.
+// Envía una respuesta en JSON en caso de fallo
+// Recibe el código HTTP, el error encontrado y el mensaje como parámetro
 func RespondWithError(c *gin.Context, status int, err error, message string) {
 	var ve validator.ValidationErrors
 
@@ -49,6 +49,8 @@ func RespondWithError(c *gin.Context, status int, err error, message string) {
 	})
 }
 
+// Envía una respuesta personalizada en JSON en caso de fallo
+// Recibe el código HTTP, el error a mostrar y el mensaje como parámetro
 func RespondWithCustomError(c *gin.Context, status int, err string, message string) {
 	c.JSON(status, model.ApiResponse{
 		Success: false,
@@ -58,6 +60,8 @@ func RespondWithCustomError(c *gin.Context, status int, err string, message stri
 	})
 }
 
+// Envía una respuesta en JSON en caso de fallo interno del programa
+// Recibe el error a mostrar como parámetro
 func RespondWithInternalError(c *gin.Context, err string) {
 	c.JSON(http.StatusInternalServerError, model.ApiResponse{
 		Success: false,
@@ -67,6 +71,7 @@ func RespondWithInternalError(c *gin.Context, err string) {
 	})
 }
 
+// Envía una respuesta personalizada en JSON en caso de usuario no autorizado
 func RespondWithUnathorizedError(c *gin.Context) {
 	c.JSON(http.StatusInternalServerError, model.ApiResponse{
 		Success: false,
@@ -75,4 +80,3 @@ func RespondWithUnathorizedError(c *gin.Context) {
 		Errors:  []string{"Insufficient permissions"},
 	})
 }
-

@@ -7,34 +7,39 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SetupRoutes configures all API routes and applies middleware for authentication and authorization.
+// Configura todal las rutas de la API y aplica los middleware necesarios
 func SetupRoutes(router *gin.Engine) {
 	api := router.Group("/api")
 
-	// Public authentication route
+	// Rutas públicas
+	// Autenticación
 	api.POST("/login", handlers.LoginHandler)
 	api.POST("/auth/forgot", handlers.ForgotPasswordHandler)
 	api.POST("/auth/reset", handlers.ResetPasswordHandler)
 
+	// Formulario para clientes
 	api.GET("form/questions", handlers.GetQuestionsHandler)
 	api.POST("form/submissions", handlers.CreateSubmissionHandler)
 
-	// Protected routes - require valid JWT token
+	// Rutas que requieren que el usuario se encuentra autenticado
 	protected := api.Group("")
 	protected.Use(middlewares.AuthMiddleware())
 
-	// Routes accessible to all authenticated users regardless of role
 	{
+		// ENTIDADES: Usuarios
 		protected.PUT("/users/:id", handlers.UpdateUserHandler)
 		protected.GET("/users/:id", handlers.GetUserHandler)
 
+		// ENTIDADES: órdenes
 		protected.GET("/orders", handlers.GetOrdersHandler)
 		protected.GET("/orders/:id", handlers.GetOrderHandler)
 		protected.PATCH("/orders/:id/status", handlers.ChangeOrderStatusHandler)
 
+		// FORMULARIO: respuestas
 		protected.GET("form/submissions/:id", handlers.GetSubmissionHandler)
 	}
 
+	// Rutas que requieren que el usuario posea el rol de admin
 	admin := protected.Group("")
 	admin.Use(middlewares.RoleRequired("admin"))
 	{

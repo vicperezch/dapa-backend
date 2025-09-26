@@ -24,10 +24,9 @@ import (
 // @host            localhost:8080
 // @BasePath        /api
 func main() {
-	// Create a new Gin router instance with default middleware (logger and recovery)
 	router := gin.Default()
 
-	// Configure CORS middleware to allow cross-origin requests
+	// Configuración del middleware de CORS
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
@@ -36,7 +35,7 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	// Register custom validators for request binding
+	// Validaciones personalizadas
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("password", utils.PasswordValidator)
 		v.RegisterValidation("phone", utils.PhoneValidator)
@@ -48,26 +47,21 @@ func main() {
 		v.RegisterValidation("submission_status", utils.SubmissionStatusValidator)
 	}
 
-	// Connect to the database
 	database.ConnectToDatabase()
 
-	// Create initial admin user if none exists
+	// Crear usuario administrador de prueba
 	if err := CreateFirstAdmin(); err != nil {
 		log.Fatal("Error creating initial admin: ", err)
 	}
 	SeedQuestionTypes()
 
-	// Setup all routes for the API
 	routes.SetupRoutes(router)
 
-	// Setup Swagger endpoint for API documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Start the server on port 8080
 	router.Run(":8080")
 }
 
-// CreateFirstAdmin checks if an admin user exists and creates one if not
 func CreateFirstAdmin() error {
 	var count int64
 	db := database.DB
@@ -82,7 +76,6 @@ func CreateFirstAdmin() error {
 		return err
 	}
 
-	// Prepare admin user data
 	admin := model.User{
 		Name:         "Admin",
 		Email:        "admin@dapa.com",
@@ -91,27 +84,25 @@ func CreateFirstAdmin() error {
 		Role:         "admin",
 	}
 
-	// Insert the new admin into the database
 	return db.Create(&admin).Error
 }
 
-// Seed question types adds the four common types of questions
 func SeedQuestionTypes() {
-    questionTypes := []string{"text", "multiple", "unique", "dropdown", "area"}
-    
-    for _, typeName := range questionTypes {
-        var existingType model.QuestionType
-        result := database.DB.Where("type = ?", typeName).First(&existingType)
-        
-        if result.Error != nil {
-            newType := model.QuestionType{Type: typeName}
-            if err := database.DB.Create(&newType).Error; err != nil {
-                log.Printf("Error creating question type %s: %v", typeName, err)
-            } else {
-                log.Printf("Question type '%s' created with ID: %d", typeName, newType.ID)
-            }
-        } else {
-            log.Printf("Question type '%s' already exists with ID: %d", typeName, existingType.ID)
-        }
-    }
+	questionTypes := []string{"text", "multiple", "unique", "dropdown", "area"}
+
+	for _, typeName := range questionTypes {
+		var existingType model.QuestionType
+		result := database.DB.Where("type = ?", typeName).First(&existingType)
+
+		if result.Error != nil {
+			newType := model.QuestionType{Type: typeName}
+			if err := database.DB.Create(&newType).Error; err != nil {
+				log.Printf("Error creating question type %s: %v", typeName, err)
+			} else {
+				log.Printf("Question type '%s' created with ID: %d", typeName, newType.ID)
+			}
+		} else {
+			log.Printf("Question type '%s' already exists with ID: %d", typeName, existingType.ID)
+		}
+	}
 }

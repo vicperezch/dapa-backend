@@ -7,8 +7,8 @@ import (
 	"net/smtp"
 )
 
-// IsAllDigits checks if a string contains only digit characters.
-// It iterates through each character and verifies its ASCII value.
+// Verifica si una string contiene únicamente dígitos
+// Retorna un boolean
 func isAllDigits(s string) bool {
 	for _, c := range s {
 		if c < 48 || c > 57 {
@@ -18,8 +18,8 @@ func isAllDigits(s string) bool {
 	return true
 }
 
-// GetTagMessage returns a user-friendly error message
-// corresponding to a validation tag.
+// Retorna un mensaje de error legible para cada validador
+// Recibe el nombre como parámetro
 func getTagMessage(tag string) string {
 	switch tag {
 	case "phone":
@@ -39,6 +39,8 @@ func getTagMessage(tag string) string {
 }
 
 // Envía un correo electrónico vía Gmail con contenido HTML
+// Recibe el recipiente y el contenido del correo como parámetros
+// Puede retornar un error
 func SendEmail(receiver, subject, htmlContent string) error {
 	sender := "deaquiparalla.gt@gmail.com"
 	smtpHost := "smtp.gmail.com"

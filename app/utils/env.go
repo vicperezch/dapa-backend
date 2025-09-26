@@ -13,8 +13,7 @@ var (
 	envLoaded bool
 )
 
-// Load reads the .env file once and loads environment variables into the process.
-// It uses sync.Once to ensure the file is loaded only a single time during the app lifecycle.
+// Carga el archivo .env y sus variables
 func Load() {
 	once.Do(func() {
 		if err := godotenv.Load(".env"); err != nil {
@@ -24,10 +23,10 @@ func Load() {
 	})
 }
 
-// EnvGet retrieves the value of the environment variable named by the key.
-// If the variable is not set, it returns the provided defaultValue.
-// If no defaultValue is provided and the variable is not set, it logs a warning and returns an empty string.
-// It ensures the .env file is loaded before accessing environment variables.
+// Obtiene el valor de una variable del archivo .env
+// Recibe la llave (nombre de la variable) y el valor por defecto a tomar
+// Retorna el valor encontrado si la variable existe
+// Si no, retorna el valor por defecto
 func EnvGet(key, defaultValue string) string {
 	if !envLoaded {
 		Load()
@@ -45,9 +44,8 @@ func EnvGet(key, defaultValue string) string {
 	return ""
 }
 
-// EnvMustGet retrieves the value of the environment variable named by the key.
-// If the variable is not set, it logs a panic and stops execution.
-// It ensures the .env file is loaded before accessing environment variables.
+// Obtiene el valor de una variable del archivo .env
+// Si la variable no existe, detiene la ejecución del programa
 func EnvMustGet(key string) string {
 	if !envLoaded {
 		Load()

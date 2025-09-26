@@ -9,9 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AuthMiddleware is a Gin middleware that checks if a valid JWT token is present.
-// It extracts the token from the Authorization header, validates it,
-// and stores the claims in the Gin context for further use.
+// Middleware para determinar si un token JWT es válido
+// Si es válido, almacena las claims para uso posterior
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := extractToken(c.Request)
@@ -33,8 +32,8 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// RoleRequired is a Gin middleware that verifies if the user has one of the allowed roles.
-// It must be used after AuthMiddleware, since it relies on the token claims being present in the context.
+// Middleware para verificar si el usuario posee los roles requeridos
+// Recibe los roles requeridos como parámetro
 func RoleRequired(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claimsInterface, exists := c.Get("claims")
@@ -69,8 +68,8 @@ func RoleRequired(roles ...string) gin.HandlerFunc {
 	}
 }
 
-// extractToken extracts the JWT token from the Authorization header.
-// It expects the format: "Bearer <token>"
+// Extrae el token JWT del authorization header
+// Retorna el token como string
 func extractToken(r *http.Request) string {
 	bearerToken := r.Header.Get("Authorization")
 	if len(bearerToken) > 7 && bearerToken[:7] == "Bearer " {
@@ -78,4 +77,3 @@ func extractToken(r *http.Request) string {
 	}
 	return ""
 }
-
