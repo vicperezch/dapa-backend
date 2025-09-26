@@ -113,6 +113,13 @@ type UpdateSubmissionStatusDTO struct {
 	Status FormStatus `json:"status" binding:"required,oneof=pending cancelled approved"`
 }
 
+type FinancialReportDTO struct {
+	Date        time.Time `json:"date"`
+	Type        string    `json:"type"`
+	TotalAmount float64   `json:"totalAmount"`
+	User        string    `json:"user"`
+}
+
 type ApiResponse struct {
 	Success bool     `json:"success"`
 	Message string   `json:"message"`
