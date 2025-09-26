@@ -120,6 +120,12 @@ type FinancialReportDTO struct {
 	User        string    `json:"user"`
 }
 
+type DriverReportDTO struct {
+	DriverName      string  `json:"driverName"`
+	TotalOrders     int     `json:"totalOrders"`
+	OrdersPerWeek float64 `json:"ordersPerWeek"`
+}
+
 type ApiResponse struct {
 	Success bool     `json:"success"`
 	Message string   `json:"message"`
