@@ -160,3 +160,25 @@ func DriversReport(c *gin.Context) {
 
 	utils.RespondWithSuccess(c, http.StatusOK, report, "Drivers report fetched successfully")
 }
+
+// @Summary		Get total income report
+// @Description	Returns the total income from all delivered orders
+// @Tags		reports
+// @Produce		json
+// @Success		200	{object} model.ApiResponse "Total income report"
+// @Failure		500	{object} model.ApiResponse "Error retrieving total income report"
+// @Router		/reports/income [get]
+func TotalIncomeReport(c *gin.Context) {
+	var totalIncome float64
+	err := database.DB.Model(&model.Order{}).Where("status = ?", "delivered").Select("sum(total_amount)").Row().Scan(&totalIncome)
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error fetching total income")
+		return
+	}
+
+	report := model.TotalIncomeReportDTO{
+		TotalIncome: totalIncome,
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, report, "Total income report fetched successfully")
+}

@@ -126,6 +126,10 @@ type DriverReportDTO struct {
 	OrdersPerWeek float64 `json:"ordersPerWeek"`
 }
 
+type TotalIncomeReportDTO struct {
+	TotalIncome float64 `json:"totalIncome"`
+}
+
 type ApiResponse struct {
 	Success bool     `json:"success"`
 	Message string   `json:"message"`
