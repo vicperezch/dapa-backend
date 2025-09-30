@@ -76,5 +76,11 @@ func SetupRoutes(router *gin.Engine) {
 		// FORMULARIO: Envíos (admin puede ver y actualizar estado)
 		admin.GET("form/submissions", handlers.GetSubmissionsHandler)
 		admin.PATCH("form/submissions/:id/status", handlers.UpdateSubmissionStatusHandler)
+
+		// REPORTE: Financiero (detallado)
+		admin.GET("/reports/financial", handlers.FinancialReport)
+		admin.GET("/reports/financial/date", handlers.FinancialReportByDate)
+		admin.GET("/reports/drivers", handlers.DriversReport)
+		admin.GET("/reports/income", handlers.TotalIncomeReport)
 	}
 }
