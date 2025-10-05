@@ -67,6 +67,13 @@ type Order struct {
 	Date         time.Time `json:"date" gorm:"type:date"`
 }
 
+type OrderToken struct {
+	ID      uint       `json:"id" gorm:"primaryKey"`
+	OrderID uint       `json:"orderId" gorm:"unique;not null;column:order_id"`
+	Token   string     `json:"token" gorm:"not null;unique;size:255"`
+	Expiry  *time.Time `json:"expiry"`
+}
+
 // ******************** FORMULARIO ********************
 // Tipos de preguntas disponibles
 type QuestionType struct {
@@ -95,7 +102,7 @@ type QuestionOption struct {
 	DeletedAt  gorm.DeletedAt `json:"deletedAt" gorm:"index"`
 }
 
-// EnvÃ­o de formulario
+// Envío de formulario
 type Submission struct {
 	ID          uint       `json:"id" gorm:"primaryKey"`
 	SubmittedAt time.Time  `json:"submittedAt" gorm:"default:CURRENT_TIMESTAMP"`
@@ -112,3 +119,4 @@ type Answer struct {
 	Question     Question         `json:"question" gorm:"foreignKey:QuestionID"`
 	Options      []QuestionOption `json:"options,omitempty" gorm:"many2many:answer_options;"`
 }
+

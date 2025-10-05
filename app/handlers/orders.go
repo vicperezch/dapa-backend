@@ -31,6 +31,12 @@ func CreateOrderHandler(c *gin.Context) {
 		return
 	}
 
+	token, err := utils.GenerateSecureToken(32)
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error creating order")
+		return
+	}
+
 	ctx := context.Background()
 	err = database.DB.Transaction(func(tx *gorm.DB) error {
 		_, txErr := gorm.G[model.Submission](tx).Where("id = ?", req.SubmissionID).Update(ctx, "status", "approved")
@@ -55,6 +61,16 @@ func CreateOrderHandler(c *gin.Context) {
 			Date:         currentDate,
 		}
 		txErr = gorm.G[model.Order](tx).Create(ctx, &order)
+		if txErr != nil {
+			return txErr
+		}
+
+		orderToken := model.OrderToken{
+			OrderID: order.ID,
+			Token:   token,
+			Expiry:  nil,
+		}
+		txErr = gorm.G[model.OrderToken](tx).Create(ctx, &orderToken)
 		if txErr != nil {
 			return txErr
 		}
@@ -269,7 +285,26 @@ func ChangeOrderStatusHandler(c *gin.Context) {
 	}
 
 	ctx := context.Background()
-	_, err = gorm.G[model.Order](database.DB).Where("id = ?", id).Update(ctx, "status", req.Status)
+
+	if req.Status != "delivered" {
+		_, err = gorm.G[model.Order](database.DB).Where("id = ?", id).Update(ctx, "status", req.Status)
+
+	} else {
+		err = database.DB.Transaction(func(tx *gorm.DB) error {
+			_, txErr := gorm.G[model.Order](database.DB).Where("id = ?", id).Update(ctx, "status", req.Status)
+			if txErr != nil {
+				return txErr
+			}
+
+			_, txErr = gorm.G[model.OrderToken](database.DB).Where("order_id = ?", id).Update(ctx, "expiry", time.Now().Add(3*24*time.Hour))
+			if txErr != nil {
+				return txErr
+			}
+
+			return nil
+		})
+	}
+
 	if err != nil {
 		utils.RespondWithInternalError(c, "Error updating order status")
 		return
@@ -277,3 +312,4 @@ func ChangeOrderStatusHandler(c *gin.Context) {
 
 	utils.RespondWithSuccess(c, http.StatusOK, nil, "Order status updated successfully")
 }
+
