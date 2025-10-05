@@ -9,9 +9,9 @@ import (
 
 var resetSecret = []byte(EnvMustGet("RESET_SECRET"))
 
-// Hashea una contraseña en texto plano utilizando bcrypt
+// Hashea una cadena en texto plano utilizando bcrypt
 // Retorna el hash como string o un error
-func HashPassword(password string) (string, error) {
+func HashString(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes), err
 }
@@ -23,9 +23,9 @@ func CheckPassword(password string, hash string) bool {
 	return err == nil
 }
 
-// Genera un token válido para reestablecer contraseña
+// Genera un token válido y seguro
 // Retorna el token como string o un error
-func GenerateResetToken(n int) (string, error) {
+func GenerateSecureToken(n int) (string, error) {
 	bytes := make([]byte, n)
 	_, err := rand.Read(bytes)
 	if err != nil {

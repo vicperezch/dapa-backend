@@ -71,7 +71,7 @@ func CreateFirstAdmin() error {
 		return nil
 	}
 
-	hashedPassword, err := utils.HashPassword("dapa12345")
+	hashedPassword, err := utils.HashString("dapa12345")
 	if err != nil {
 		return err
 	}

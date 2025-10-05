@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"crypto/sha256"
 	"dapa/app/model"
 	"dapa/app/utils"
 	"dapa/database"
-	"encoding/hex"
 	"fmt"
 	"net/http"
 	"time"
@@ -34,7 +32,7 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	passwordHash, err := utils.HashPassword(req.Password)
+	passwordHash, err := utils.HashString(req.Password)
 	if err != nil {
 		utils.RespondWithInternalError(c, "Eror registering user")
 		return
@@ -132,17 +130,17 @@ func ForgotPasswordHandler(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateResetToken(32)
+	token, err := utils.GenerateSecureToken(32)
 	if err != nil {
 		utils.RespondWithInternalError(c, "Error sending reset email")
 		return
 	}
 
 	// Hashear el token y almacenar en la base de datos
-	hash := sha256.Sum256([]byte(token))
+	hash, _ := utils.HashString(token)
 	expiry := time.Now().Add(30 * time.Minute)
 	resetToken := model.ResetToken{
-		Token:  hex.EncodeToString(hash[:]),
+		Token:  hash,
 		Expiry: expiry,
 		UserID: user.ID,
 		IsUsed: false,
@@ -185,12 +183,12 @@ func ResetPasswordHandler(c *gin.Context) {
 		return
 	}
 
-	hash := sha256.Sum256([]byte(req.Token))
+	hash, _ := utils.HashString(req.Token)
 
 	var resetToken model.ResetToken
 	var user model.User
 
-	err = database.DB.Where("token = ? AND is_used = ?", hex.EncodeToString(hash[:]), false).First(&resetToken).Error
+	err = database.DB.Where("token = ? AND is_used = ?", hash, false).First(&resetToken).Error
 	if err != nil {
 		utils.RespondWithInternalError(c, "Error resetting password")
 		return
@@ -202,7 +200,7 @@ func ResetPasswordHandler(c *gin.Context) {
 		return
 	}
 
-	paswordHash, err := utils.HashPassword(req.NewPassword)
+	paswordHash, err := utils.HashString(req.NewPassword)
 	if err != nil {
 		utils.RespondWithInternalError(c, "Error resetting password")
 		return

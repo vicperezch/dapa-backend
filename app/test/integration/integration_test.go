@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
-	"github.com/go-playground/validator/v10"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
+	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -58,14 +58,14 @@ func setupRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-        v.RegisterValidation("password", utils.PasswordValidator)
-        v.RegisterValidation("phone", utils.PhoneValidator)
-        v.RegisterValidation("question_text", utils.QuestionTextValidator)
-        v.RegisterValidation("question_desc", utils.QuestionDescriptionValidator)
-        v.RegisterValidation("question_type", utils.QuestionTypeValidator)
-        v.RegisterValidation("question_option", utils.QuestionOptionValidator)
-        v.RegisterValidation("submission_status", utils.SubmissionStatusValidator)
-    }
+		v.RegisterValidation("password", utils.PasswordValidator)
+		v.RegisterValidation("phone", utils.PhoneValidator)
+		v.RegisterValidation("question_text", utils.QuestionTextValidator)
+		v.RegisterValidation("question_desc", utils.QuestionDescriptionValidator)
+		v.RegisterValidation("question_type", utils.QuestionTypeValidator)
+		v.RegisterValidation("question_option", utils.QuestionOptionValidator)
+		v.RegisterValidation("submission_status", utils.SubmissionStatusValidator)
+	}
 	routes.SetupRoutes(router)
 	return router
 }
@@ -99,7 +99,7 @@ func loginAndGetToken(t *testing.T, router *gin.Engine, email, password string) 
 // createTestAdmin crea un usuario admin para testing
 func createTestAdmin(t *testing.T, db *gorm.DB) model.User {
 	adminPassword := "supersecret123"
-	hashedPassword, err := utils.HashPassword(adminPassword)
+	hashedPassword, err := utils.HashString(adminPassword)
 	assert.NoError(t, err)
 
 	admin := model.User{
@@ -111,13 +111,13 @@ func createTestAdmin(t *testing.T, db *gorm.DB) model.User {
 		LicenseExpirationDate: time.Now().AddDate(1, 0, 0),
 		IsActive:              true,
 	}
-	
+
 	result := db.Create(&admin)
 	assert.NoError(t, result.Error, "Error creando usuario admin")
 	return admin
 }
 
-func deleteAdminTest(db *gorm.DB){
+func deleteAdminTest(db *gorm.DB) {
 	db.Exec("DELETE FROM users WHERE email = ?", "admin@test.com")
 }
 
@@ -137,20 +137,20 @@ func TestUser_FullCycle_WithRealAuth(t *testing.T) {
 
 	// 1. Crear un usuario admin dummy directamente en la BD
 	admin := createTestAdmin(t, db)
-	
+
 	// 2. Hacer login y obtener token JWT
 	token := loginAndGetToken(t, router, admin.Email, "supersecret123")
 	t.Logf("Token obtenido: %s", token)
 
 	// 3. Crear un nuevo usuario
 	newUser := map[string]interface{}{
-		"name":                   "John",
-		"lastName":               "Doe",
-		"phone":                  "555123456",
-		"email":                  "john.doe@test.com",
-		"password":               "dapa123456",
-		"role":                   "driver",
-		"licenseExpirationDate":  time.Now().AddDate(1, 0, 0).Format("2006-01-02T15:04:05Z07:00"),
+		"name":                  "John",
+		"lastName":              "Doe",
+		"phone":                 "555123456",
+		"email":                 "john.doe@test.com",
+		"password":              "dapa123456",
+		"role":                  "driver",
+		"licenseExpirationDate": time.Now().AddDate(1, 0, 0).Format("2006-01-02T15:04:05Z07:00"),
 	}
 	jsonBody, _ := json.Marshal(newUser)
 
@@ -215,11 +215,11 @@ func TestVehicle_FullCycle_WithRealAuth(t *testing.T) {
 
 	// 1. Crear vehículo
 	newVehicle := map[string]interface{}{
-		"brand":        "Toyota",
-		"model":        "Hilux",
-		"licensePlate": "P-123ABC",
-		"capacityKg":   2500.0,
-		"available":    true,
+		"brand":         "Toyota",
+		"model":         "Hilux",
+		"licensePlate":  "P-123ABC",
+		"capacityKg":    2500.0,
+		"available":     true,
 		"insuranceDate": time.Now().AddDate(1, 0, 0),
 	}
 	jsonBody, _ := json.Marshal(newVehicle)
@@ -258,11 +258,11 @@ func TestVehicle_FullCycle_WithRealAuth(t *testing.T) {
 
 	// 4. Actualizar vehículo
 	updateVehicle := map[string]interface{}{
-		"brand":        "Toyota",
-		"model":        "Hilux Updated",
-		"licensePlate": "P-123SBC",
-		"capacityKg":   2000.0,
-		"available":    true,
+		"brand":         "Toyota",
+		"model":         "Hilux Updated",
+		"licensePlate":  "P-123SBC",
+		"capacityKg":    2000.0,
+		"available":     true,
 		"insuranceDate": time.Now().AddDate(2, 0, 0),
 	}
 	jsonBody, _ = json.Marshal(updateVehicle)
@@ -444,3 +444,4 @@ func TestAuthentication_Flow(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
+
