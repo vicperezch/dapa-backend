@@ -21,6 +21,9 @@ func SetupRoutes(router *gin.Engine) {
 	api.GET("form/questions", handlers.GetQuestionsHandler)
 	api.POST("form/submissions", handlers.CreateSubmissionHandler)
 
+	// Tracking de órdenes
+	api.GET("/orders/track", handlers.OrderTrackingHandler)
+
 	// Rutas que requieren que el usuario se encuentra autenticado
 	protected := api.Group("")
 	protected.Use(middlewares.AuthMiddleware())

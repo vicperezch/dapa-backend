@@ -113,6 +113,17 @@ type UpdateSubmissionStatusDTO struct {
 	Status FormStatus `json:"status" binding:"required,oneof=pending cancelled approved"`
 }
 
+type OrderTokenDTO struct {
+	Token string `json:"token" binding:"required"`
+}
+
+type OrderTrackingDTO struct {
+	Origin      string `json:"origin"`
+	Destination string `json:"destination"`
+	Status      string `json:"status"`
+	Type        string `json:"type"`
+}
+
 type FinancialReportDTO struct {
 	Date        time.Time `json:"date"`
 	Type        string    `json:"type"`
@@ -121,8 +132,8 @@ type FinancialReportDTO struct {
 }
 
 type DriverReportDTO struct {
-	DriverName      string  `json:"driverName"`
-	TotalOrders     int     `json:"totalOrders"`
+	DriverName    string  `json:"driverName"`
+	TotalOrders   int     `json:"totalOrders"`
 	OrdersPerWeek float64 `json:"ordersPerWeek"`
 }
 

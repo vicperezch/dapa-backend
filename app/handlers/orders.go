@@ -313,3 +313,51 @@ func ChangeOrderStatusHandler(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusOK, nil, "Order status updated successfully")
 }
 
+// @Summary		Returns an order status for client tracking
+// @Description	Returns the status of one order using its associated token
+// @Tags		orders
+// @Produce		json
+// @Param		status body model.OrderTrackingDTO true "Order token"
+// @Success		200	{object} model.ApiResponse "Order retrieved successfully"
+// @Failure		400 {object} model.ApiResponse "Invalid request format"
+// @Failure		410 {object} model.ApiResponse "Order token has expired"
+// @Failure		500 {object} model.ApiResponse "Error retrieving order"
+// @Router		/orders/track [GET]
+func OrderTrackingHandler(c *gin.Context) {
+	var req model.OrderTokenDTO
+	var err error
+
+	err = c.ShouldBindJSON(&req)
+	if err != nil {
+		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
+		return
+	}
+
+	var token model.OrderToken
+	err = database.DB.Where("token = ?", req.Token).First(&token).Error
+	if err != nil {
+		utils.RespondWithInternalError(c, "Could not retrieve order")
+		return
+	}
+
+	if token.Expiry != nil && time.Now().After(*token.Expiry) {
+		utils.RespondWithCustomError(c, http.StatusGone, "Tracking expired", "The tracking for this order has expired")
+		return
+	}
+
+	var order model.Order
+	err = database.DB.Where("id = ?", token.OrderID).First(&order).Error
+	if err != nil {
+		utils.RespondWithInternalError(c, "Could not retrieve order")
+		return
+	}
+
+	orderTracked := model.OrderTrackingDTO{
+		Origin:      order.Origin,
+		Destination: order.Destination,
+		Status:      order.Status,
+		Type:        order.Type,
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, orderTracked, "Test")
+}
