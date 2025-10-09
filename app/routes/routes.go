@@ -27,15 +27,15 @@ func SetupRoutes(router *gin.Engine) {
 	// Rutas que requieren que el usuario se encuentra autenticado
 	protected := api.Group("")
 	protected.Use(middlewares.AuthMiddleware())
-
 	{
 		// ENTIDADES: Usuarios
 		protected.PUT("/users/:id", handlers.UpdateUserHandler)
 		protected.GET("/users/:id", handlers.GetUserHandler)
 
 		// ENTIDADES: órdenes
+		protected.GET("/orders/:id/token", handlers.GetOrderTokenHandler)  // MÁS ESPECÍFICO PRIMERO
+		protected.GET("/orders/:id", handlers.GetOrderHandler)             // MENOS ESPECÍFICO DESPUÉS
 		protected.GET("/orders", handlers.GetOrdersHandler)
-		protected.GET("/orders/:id", handlers.GetOrderHandler)
 		protected.PATCH("/orders/:id/status", handlers.ChangeOrderStatusHandler)
 
 		// FORMULARIO: respuestas

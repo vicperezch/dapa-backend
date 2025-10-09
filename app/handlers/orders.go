@@ -324,29 +324,26 @@ func ChangeOrderStatusHandler(c *gin.Context) {
 // @Failure		500 {object} model.ApiResponse "Error retrieving order"
 // @Router		/orders/track [GET]
 func OrderTrackingHandler(c *gin.Context) {
-	var req model.OrderTokenDTO
-	var err error
-
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid request format")
+	token := c.Query("token")
+	if token == "" {
+		utils.RespondWithError(c, http.StatusBadRequest, nil, "Token is required")
 		return
 	}
 
-	var token model.OrderToken
-	err = database.DB.Where("token = ?", req.Token).First(&token).Error
+	var orderToken model.OrderToken
+	err := database.DB.Where("token = ?", token).First(&orderToken).Error
 	if err != nil {
 		utils.RespondWithInternalError(c, "Could not retrieve order")
 		return
 	}
 
-	if token.Expiry != nil && time.Now().After(*token.Expiry) {
+	if orderToken.Expiry != nil && time.Now().After(*orderToken.Expiry) {
 		utils.RespondWithCustomError(c, http.StatusGone, "Tracking expired", "The tracking for this order has expired")
 		return
 	}
 
 	var order model.Order
-	err = database.DB.Where("id = ?", token.OrderID).First(&order).Error
+	err = database.DB.Where("id = ?", orderToken.OrderID).First(&order).Error
 	if err != nil {
 		utils.RespondWithInternalError(c, "Could not retrieve order")
 		return
@@ -359,5 +356,60 @@ func OrderTrackingHandler(c *gin.Context) {
 		Type:        order.Type,
 	}
 
-	utils.RespondWithSuccess(c, http.StatusOK, orderTracked, "Test")
+	utils.RespondWithSuccess(c, http.StatusOK, orderTracked, "Order retrieved successfully")
+}
+
+// @Summary		Get order tracking token
+// @Description	Returns the tracking token for a specific order
+// @Tags		orders
+// @Produce		json
+// @Param       id path int true "Order ID"
+// @Success		200	{object} model.ApiResponse "Token retrieved successfully"
+// @Failure		403	{object} model.ApiResponse "Insufficient permissions"
+// @Failure		404	{object} model.ApiResponse "Token not found"
+// @Failure		500	{object} model.ApiResponse "Error retrieving token"
+// @Router		/orders/{id}/token [get]
+// @Summary		Get order tracking token
+// @Description	Returns the tracking token for a specific order
+// @Tags		orders
+// @Produce		json
+// @Param       id path int true "Order ID"
+// @Success		200	{object} model.ApiResponse "Token retrieved successfully"
+// @Failure		403	{object} model.ApiResponse "Insufficient permissions"
+// @Failure		404	{object} model.ApiResponse "Token not found"
+// @Failure		500	{object} model.ApiResponse "Error retrieving token"
+// @Router		/orders/{id}/token [get]
+func GetOrderTokenHandler(c *gin.Context) {
+	claims := c.MustGet("claims").(*model.EmployeeClaims)
+	id := c.Param("id")
+
+	var order model.Order
+	err := database.DB.Where("id = ?", id).First(&order).Error
+	if err != nil {
+		utils.RespondWithCustomError(
+			c,
+			http.StatusNotFound,
+			"Order not found",
+			"Something went wrong",
+		)
+		return
+	}
+
+	if claims.Role == "driver" && (order.UserID == nil || *order.UserID != claims.UserID) {
+		utils.RespondWithUnathorizedError(c)
+		return
+	}
+
+	var orderToken model.OrderToken
+	err = database.DB.Where("order_id = ?", id).First(&orderToken).Error
+	if err != nil {
+		utils.RespondWithInternalError(c, "Could not retrieve token")
+		return
+	}
+
+	response := map[string]string{
+		"token": orderToken.Token,
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, response, "Token retrieved successfully")
 }
