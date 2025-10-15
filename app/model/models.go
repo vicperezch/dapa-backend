@@ -120,3 +120,18 @@ type Answer struct {
 	Options      []QuestionOption `json:"options,omitempty" gorm:"many2many:answer_options;"`
 }
 
+// ******************** FINANZAS ********************
+type ExpenseType struct {
+	ID   uint   `json:"id" gorm:"primaryKey"`
+	Type string `json:"type" gorm:"not null;size:25"`
+}
+
+type Expense struct {
+	ID               uint        `json:"id" gorm:"primaryKey"`
+	Date             time.Time   `json:"date" gorm:"not null"`
+	TypeID           uint        `json:"typeId" gorm:"not null"`
+	Type             ExpenseType `json:"type" gorm:"foreignKey:TypeID"`
+	TemporalEmployee bool        `json:"temporalEmployee" gorm:"not null;column:temporal_employee"`
+	Description      string      `json:"description" gorm:"size:255"`
+	Amount           float64     `json:"amount" gorm:"not null" validate:"gt=0"`
+}
