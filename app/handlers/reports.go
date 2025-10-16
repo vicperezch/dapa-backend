@@ -182,3 +182,167 @@ func TotalIncomeReport(c *gin.Context) {
 
 	utils.RespondWithSuccess(c, http.StatusOK, report, "Total income report fetched successfully")
 }
+
+// @Summary		Get completed quotations chart
+// @Description	Returns data for the completed quotations chart
+// @Tags		reports
+// @Produce		json
+// @Success		200	{object} model.ApiResponse "Completed quotations chart data"
+// @Failure		500	{object} model.ApiResponse "Error retrieving completed quotations chart data"
+// @Router		/reports/completed-quotations [get]
+func CompletedQuotationsChart(c *gin.Context) {
+	var results []struct {
+		Month string
+		Count int
+	}
+	err := database.DB.Model(&model.Submission{}).
+		Select("TO_CHAR(submitted_at, 'Month YYYY') as month, COUNT(*) as count").
+		Where("status = ?", model.FormStatusApproved).
+		Group("month").
+		Order("month").
+		Scan(&results).Error
+
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error fetching completed quotations")
+		return
+	}
+
+	var categories []string
+	var data []int
+	for _, result := range results {
+		categories = append(categories, result.Month)
+		data = append(data, result.Count)
+	}
+
+	chartData := model.CompletedQuotationsDTO{
+		Series: []struct {
+			Data []int  `json:"data"`
+		}{
+			{Data: data},
+		},
+		Categories: categories,
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Completed quotations chart data fetched successfully")
+}
+
+// @Summary		Get quotations status chart
+// @Description	Returns data for the quotations status chart
+// @Tags		reports
+// @Produce		json
+// @Success		200	{object} model.ApiResponse "Quotations status chart data"
+// @Failure		500	{object} model.ApiResponse "Error retrieving quotations status chart data"
+// @Router		/reports/quotations-status [get]
+func QuotationsStatusChart(c *gin.Context) {
+	var results []struct {
+		Status string
+		Count  int
+	}
+	err := database.DB.Model(&model.Submission{}).
+		Select("status, COUNT(*) as count").
+		Group("status").
+		Scan(&results).Error
+
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error fetching quotations status")
+		return
+	}
+
+	var series []float64
+	var labels []string
+	for _, result := range results {
+		series = append(series, float64(result.Count))
+		labels = append(labels, result.Status)
+	}
+
+	chartData := model.QuotationsStatusDTO{
+		Series: series,
+		Labels: labels,
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Quotations status chart data fetched successfully")
+}
+
+// @Summary		Get drivers performance chart
+// @Description	Returns data for the drivers performance chart
+// @Tags		reports
+// @Produce		json
+// @Success		200	{object} model.ApiResponse "Drivers performance chart data"
+// @Failure		500	{object} model.ApiResponse "Error retrieving drivers performance chart data"
+// @Router		/reports/drivers-performance [get]
+func DriversPerformanceChart(c *gin.Context) {
+	var drivers []model.User
+	err := database.DB.Where("role = ?", "driver").Find(&drivers).Error
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error fetching drivers")
+		return
+	}
+
+	var categories []string
+	var deliveredData []int
+	var pendingData []int
+
+	for _, driver := range drivers {
+		categories = append(categories, driver.Name+" "+driver.LastName)
+
+		var deliveredCount int64
+		database.DB.Model(&model.Order{}).Where("user_id = ? AND status = ?", driver.ID, "delivered").Count(&deliveredCount)
+		deliveredData = append(deliveredData, int(deliveredCount))
+
+		var pendingCount int64
+		database.DB.Model(&model.Order{}).Where("user_id = ? AND status = ?", driver.ID, "pending").Count(&pendingCount)
+		pendingData = append(pendingData, int(pendingCount))
+	}
+
+	chartData := model.DriversBarDataDTO{
+		Series: []struct {
+			Name string `json:"name"`
+			Data []int  `json:"data"`
+		}{
+			{Name: "delivered", Data: deliveredData},
+			{Name: "pending", Data: pendingData},
+		},
+		Categories: categories,
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Drivers performance chart data fetched successfully")
+}
+
+// @Summary		Get drivers trip participation chart
+// @Description	Returns data for the drivers trip participation chart
+// @Tags		reports
+// @Produce		json
+// @Success		200	{object} model.ApiResponse "Drivers trip participation chart data"
+// @Failure		500	{object} model.ApiResponse "Error retrieving drivers trip participation chart data"
+// @Router		/reports/drivers-trip-participation [get]
+func DriversTripParticipationChart(c *gin.Context) {
+	var results []struct {
+		Driver string
+		Count  int
+	}
+	err := database.DB.Model(&model.Order{}).
+		Select("users.name || ' ' || users.last_name as driver, COUNT(*) as count").
+		Joins("join users on users.id = orders.user_id").
+		Where("orders.status = ?", "delivered").
+		Group("driver").
+		Scan(&results).Error
+
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error fetching drivers trip participation")
+		return
+	}
+
+	var series []int
+	var labels []string
+	for _, result := range results {
+		series = append(series, result.Count)
+		labels = append(labels, result.Driver)
+	}
+
+	chartData := model.TripParticipationDTO{
+		Series: series,
+		Labels: labels,
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Drivers trip participation chart data fetched successfully")
+}

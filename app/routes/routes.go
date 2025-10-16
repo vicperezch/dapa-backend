@@ -85,5 +85,11 @@ func SetupRoutes(router *gin.Engine) {
 		admin.GET("/reports/financial/date", handlers.FinancialReportByDate)
 		admin.GET("/reports/drivers", handlers.DriversReport)
 		admin.GET("/reports/income", handlers.TotalIncomeReport)
+
+		// REPORTE: Gráficas
+		admin.GET("/reports/completed-quotations", handlers.CompletedQuotationsChart)
+		admin.GET("/reports/quotations-status", handlers.QuotationsStatusChart)
+		admin.GET("/reports/drivers-performance", handlers.DriversPerformanceChart)
+		admin.GET("/reports/drivers-trip-participation", handlers.DriversTripParticipationChart)
 	}
 }

@@ -141,6 +141,38 @@ type TotalIncomeReportDTO struct {
 	TotalIncome float64 `json:"totalIncome"`
 }
 
+type CompletedQuotationsDTO struct {
+	Series     []struct {
+		Data []int  `json:"data"`
+	} `json:"series"`
+	Categories []string `json:"categories"`
+}
+
+type QuotationsStatusDTO struct {
+	Series []float64 `json:"series"`
+	Labels []string  `json:"labels"`
+}
+
+type DriverPerformanceDTO struct {
+	Series     []struct {
+		Data []float64 `json:"data"`
+	} `json:"series"`
+	Categories []string `json:"categories"`
+}
+
+type DriversBarDataDTO struct {
+	Series []struct {
+		Name string `json:"name"`
+		Data []int  `json:"data"`
+	} `json:"series"`
+	Categories []string `json:"categories"`
+}
+
+type TripParticipationDTO struct {
+	Series []int    `json:"series"`
+	Labels []string `json:"labels"`
+}
+
 type ApiResponse struct {
 	Success bool     `json:"success"`
 	Message string   `json:"message"`
