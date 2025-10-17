@@ -346,3 +346,146 @@ func DriversTripParticipationChart(c *gin.Context) {
 
 	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Drivers trip participation chart data fetched successfully")
 }
+
+func FinancialControlIncome(c *gin.Context) {
+	// Opcional: filtrar por rango de fechas usando query params startDate y endDate (YYYY-MM-DD)
+	startDateStr := c.Query("startDate")
+	endDateStr := c.Query("endDate")
+
+	var startDate, endDate time.Time
+	var err error
+	if startDateStr != "" {
+		startDate, err = time.Parse("2006-01-02", startDateStr)
+		if err != nil {
+			utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid start date format")
+			return
+		}
+	}
+	if endDateStr != "" {
+		endDate, err = time.Parse("2006-01-02", endDateStr)
+		if err != nil {
+			utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid end date format")
+			return
+		}
+	}
+
+	// Resultado intermedio
+	var results []struct {
+		Date          time.Time `json:"date"`
+		InType        string    `json:"in_type"`
+		Amount        float64   `json:"amount"`
+		PaymentMethod string    `json:"payment_method"`
+		Assigned      string    `json:"assigned"`
+		Description   string    `json:"description"`
+	}
+
+	q := database.DB.Model(&model.Order{}).
+		Select("orders.date, orders.type as in_type, orders.total_amount as amount, orders.details as description, COALESCE(users.name || ' ' || users.last_name, 'Sin responsable') as assigned, users.id as user_id").
+		Joins("left join users on users.id = orders.user_id").
+		Where("orders.status = ?", "delivered")
+
+	if !startDate.IsZero() && !endDate.IsZero() {
+		q = q.Where("orders.date BETWEEN ? AND ?", startDate, endDate)
+	} else if !startDate.IsZero() {
+		q = q.Where("orders.date >= ?", startDate)
+	} else if !endDate.IsZero() {
+		q = q.Where("orders.date <= ?", endDate)
+	}
+
+	if err := q.Order("orders.date desc").Scan(&results).Error; err != nil {
+		utils.RespondWithInternalError(c, "Error fetching income records")
+		return
+	}
+
+	// PaymentMethod no está en la entidad Order actualmente, dejar como vacío o N/A
+	for i := range results {
+		if results[i].PaymentMethod == "" {
+			results[i].PaymentMethod = "N/A"
+		}
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, results, "Financial income control fetched successfully")
+}
+
+func FinancialControlSpending(c *gin.Context) {
+	// Opcional: filtrar por rango de fechas usando query params startDate y endDate (YYYY-MM-DD)
+	startDateStr := c.Query("startDate")
+	endDateStr := c.Query("endDate")
+
+	var startDate, endDate time.Time
+	var err error
+	if startDateStr != "" {
+		startDate, err = time.Parse("2006-01-02", startDateStr)
+		if err != nil {
+			utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid start date format")
+			return
+		}
+	}
+	if endDateStr != "" {
+		endDate, err = time.Parse("2006-01-02", endDateStr)
+		if err != nil {
+			utils.RespondWithError(c, http.StatusBadRequest, err, "Invalid end date format")
+			return
+		}
+	}
+
+	var results []struct {
+		Date          time.Time `json:"date"`
+		ExType        string    `json:"ex_type"`
+		Assigned      string    `json:"assigned"`
+		Description   string    `json:"description"`
+		PaymentMethod string    `json:"payment_method"`
+		Amount        float64   `json:"amount"`
+	}
+
+	q := database.DB.Model(&model.Expense{}).
+		Select("expenses.date, expense_types.type as ex_type, expenses.temporal_employee, expenses.description, expenses.amount").
+		Joins("join expense_types on expense_types.id = expenses.type_id")
+
+	if !startDate.IsZero() && !endDate.IsZero() {
+		q = q.Where("expenses.date BETWEEN ? AND ?", startDate, endDate)
+	} else if !startDate.IsZero() {
+		q = q.Where("expenses.date >= ?", startDate)
+	} else if !endDate.IsZero() {
+		q = q.Where("expenses.date <= ?", endDate)
+	}
+
+	// Escanear en una estructura temporal que incluya temporal_employee para mapear Assigned
+	var tmpResults []struct {
+		Date            time.Time `json:"date"`
+		ExType          string    `json:"ex_type"`
+		TemporalEmployee bool     `json:"temporal_employee"`
+		Description     string    `json:"description"`
+		Amount          float64   `json:"amount"`
+	}
+
+	if err := q.Order("expenses.date desc").Scan(&tmpResults).Error; err != nil {
+		utils.RespondWithInternalError(c, "Error fetching spending records")
+		return
+	}
+
+	// Mapear tmpResults a results y convertir temporal_employee a Assigned
+	for _, r := range tmpResults {
+		assigned := ""
+		if r.TemporalEmployee {
+			assigned = "temporal"
+		}
+		results = append(results, struct {
+			Date          time.Time `json:"date"`
+			ExType        string    `json:"ex_type"`
+			Assigned      string    `json:"assigned"`
+			Description   string    `json:"description"`
+			PaymentMethod string    `json:"payment_method"`
+			Amount        float64   `json:"amount"`
+		}{
+			Date:          r.Date,
+			ExType:        r.ExType,
+			Assigned:      assigned,
+			Description:   r.Description,
+			PaymentMethod: "N/A",
+			Amount:        r.Amount,
+		})
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, results, "Financial spending control fetched successfully")
+}
