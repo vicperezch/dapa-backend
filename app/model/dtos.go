@@ -7,7 +7,7 @@ type UserDTO struct {
 	LastName              string    `json:"lastName" binding:"required"`
 	Phone                 string    `json:"phone" binding:"required,phone"`
 	Email                 string    `json:"email" binding:"required,email"`
-	Role                  string    `json:"role" binding:"required,oneof=admin driver"`
+	Role                  string    `json:"role" binding:"required,oneof=admin driver helper"`
 	LicenseExpirationDate time.Time `json:"licenseExpirationDate"`
 }
 
@@ -44,7 +44,7 @@ type RegisterDTO struct {
 	Email                 string    `json:"email" binding:"required,email"`
 	LicenseExpirationDate time.Time `json:"licenseExpirationDate" binding:"required_if=Role driver"`
 	Password              string    `json:"password" binding:"required,password"`
-	Role                  string    `json:"role" binding:"required,oneof=admin driver"`
+	Role                  string    `json:"role" binding:"required,oneof=admin driver helper"`
 }
 
 type ForgotPasswordDTO struct {
@@ -142,8 +142,8 @@ type TotalIncomeReportDTO struct {
 }
 
 type CompletedQuotationsDTO struct {
-	Series     []struct {
-		Data []int  `json:"data"`
+	Series []struct {
+		Data []int `json:"data"`
 	} `json:"series"`
 	Categories []string `json:"categories"`
 }
@@ -154,7 +154,7 @@ type QuotationsStatusDTO struct {
 }
 
 type DriverPerformanceDTO struct {
-	Series     []struct {
+	Series []struct {
 		Data []float64 `json:"data"`
 	} `json:"series"`
 	Categories []string `json:"categories"`

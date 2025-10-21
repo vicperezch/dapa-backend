@@ -18,8 +18,6 @@ func GenerateToken(user *model.User) (string, error) {
 
 	claims := &model.EmployeeClaims{
 		UserID: user.ID,
-		Name:   user.Name + " " + user.LastName,
-		Email:  user.Email,
 		Role:   user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
