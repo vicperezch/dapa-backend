@@ -52,6 +52,7 @@ func CreateQuestionHandler(c *gin.Context) {
 		Description: req.Description,
 		TypeID:      req.TypeID,
 		IsActive:    req.IsActive == nil || *req.IsActive,
+		IsRequiered: req.IsRequiered == nil || *req.IsRequiered,
 		Position:    maxPos + 1, // nueva pregunta al final
 	}
 
@@ -213,6 +214,10 @@ func UpdateQuestionHandler(c *gin.Context) {
 	question.Type = newType
 	if req.IsActive != nil {
 		question.IsActive = *req.IsActive
+	}
+
+	if req.IsRequiered != nil {
+    	question.IsRequiered = *req.IsRequiered
 	}
 
 	// Guardar cambios básicos de la pregunta
@@ -407,6 +412,40 @@ func ToggleQuestionActiveHandler(c *gin.Context) {
 	}
 
 	question.IsActive = !question.IsActive
+
+	if err := database.DB.Save(&question).Error; err != nil {
+		utils.RespondWithInternalError(c, "Error updating question")
+		return
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, nil, "Question updated successfully")
+}
+
+// @Summary		Changes if a question is requiered o not
+// @Description	Sets the question requiered true or false
+// @Tags		form
+// @Produce		json
+// @Param		id path int true "Question ID"
+// @Success		200	{object} model.ApiResponse "Question status changed"
+// @Failure     400 {object} model.ApiResponse "Invalid request format"
+// @Failure     404 {object} model.ApiResponse "Question not found"
+// @Failure		500	{object} model.ApiResponse "Error updating question"
+// @Router		/form/questions/{id}/requiered [patch]
+func ToggleQuestionRequieredHandler(c *gin.Context) {
+	id := c.Param("id")
+
+	var question model.Question
+	if err := database.DB.First(&question, id).Error; err != nil {
+		utils.RespondWithCustomError(
+			c,
+			http.StatusNotFound,
+			"Question not found",
+			"Error updating question",
+		)
+		return
+	}
+
+	question.IsRequiered = !question.IsRequiered
 
 	if err := database.DB.Save(&question).Error; err != nil {
 		utils.RespondWithInternalError(c, "Error updating question")
