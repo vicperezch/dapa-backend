@@ -52,7 +52,7 @@ func CreateQuestionHandler(c *gin.Context) {
 		Description: req.Description,
 		TypeID:      req.TypeID,
 		IsActive:    req.IsActive == nil || *req.IsActive,
-		IsRequiered: req.IsRequiered == nil || *req.IsRequiered,
+		IsRequired: req.IsRequired == nil || *req.IsRequired,
 		Position:    maxPos + 1, // nueva pregunta al final
 	}
 
@@ -216,8 +216,8 @@ func UpdateQuestionHandler(c *gin.Context) {
 		question.IsActive = *req.IsActive
 	}
 
-	if req.IsRequiered != nil {
-    	question.IsRequiered = *req.IsRequiered
+	if req.IsRequired != nil {
+    	question.IsRequired = *req.IsRequired
 	}
 
 	// Guardar cambios básicos de la pregunta
@@ -445,7 +445,7 @@ func ToggleQuestionRequieredHandler(c *gin.Context) {
 		return
 	}
 
-	question.IsRequiered = !question.IsRequiered
+	question.IsRequired = !question.IsRequired
 
 	if err := database.DB.Save(&question).Error; err != nil {
 		utils.RespondWithInternalError(c, "Error updating question")

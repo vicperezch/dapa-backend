@@ -91,7 +91,7 @@ type QuestionDTO struct {
 	Description *string             `json:"description,omitempty" binding:"omitempty,max=255"`
 	TypeID      uint                `json:"typeId" binding:"required"`
 	IsActive    *bool               `json:"isActive,omitempty"`
-	IsRequiered *bool				`json:"is_requiered,omitempty"`
+	IsRequired *bool				`json:"is_required,omitempty"`
 	Options     []QuestionOptionDTO `json:"options,omitempty"`
 }
 
