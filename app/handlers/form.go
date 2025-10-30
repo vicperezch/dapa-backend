@@ -51,8 +51,8 @@ func CreateQuestionHandler(c *gin.Context) {
 		Question:    req.Question,
 		Description: req.Description,
 		TypeID:      req.TypeID,
-		IsActive:    req.IsActive == nil || *req.IsActive,
-		IsRequired: req.IsRequired == nil || *req.IsRequired,
+		IsActive:    req.IsActive != nil || *req.IsActive,
+		IsRequired: req.IsRequired != nil || *req.IsRequired,
 		Position:    maxPos + 1, // nueva pregunta al final
 	}
 
@@ -431,7 +431,7 @@ func ToggleQuestionActiveHandler(c *gin.Context) {
 // @Failure     404 {object} model.ApiResponse "Question not found"
 // @Failure		500	{object} model.ApiResponse "Error updating question"
 // @Router		/form/questions/{id}/requiered [patch]
-func ToggleQuestionRequieredHandler(c *gin.Context) {
+func ToggleQuestionRequiredHandler(c *gin.Context) {
 	id := c.Param("id")
 
 	var question model.Question
