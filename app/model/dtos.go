@@ -198,6 +198,10 @@ type PaymentMethodDistributionDTO struct {
 	Labels []string `json:"labels"`
 }
 
+type ExpenseTypeDTO struct {
+	Type string `json:"type" binding:"required,max=25"`
+}
+
 type ApiResponse struct {
 	Success bool     `json:"success"`
 	Message string   `json:"message"`
