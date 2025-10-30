@@ -79,6 +79,12 @@ func FinancialReportByDate(c *gin.Context) {
 		return
 	}
 
+	if len(orders) == 0 {
+		utils.RespondWithSuccess(c, http.StatusOK, []model.FinancialReportDTO{}, "No financial data available for the given date range")
+		return
+	}
+
+
 	var report []model.FinancialReportDTO
 	for _, order := range orders {
 		var user model.User
@@ -170,10 +176,15 @@ func DriversReport(c *gin.Context) {
 // @Router		/reports/income [get]
 func TotalIncomeReport(c *gin.Context) {
 	var totalIncome float64
-	err := database.DB.Model(&model.Order{}).Where("status = ?", "delivered").Select("sum(total_amount)").Row().Scan(&totalIncome)
+	err := database.DB.
+			Model(&model.Order{}).
+			Where("status = ?", "delivered").
+			Select("COALESCE(SUM(total_amount), 0)").
+			Row().
+			Scan(&totalIncome)
 	if err != nil {
-		utils.RespondWithInternalError(c, "Error fetching total income")
-		return
+			utils.RespondWithInternalError(c, "Error fetching total income")
+			return
 	}
 
 	report := model.TotalIncomeReportDTO{
@@ -488,4 +499,185 @@ func FinancialControlSpending(c *gin.Context) {
 	}
 
 	utils.RespondWithSuccess(c, http.StatusOK, results, "Financial spending control fetched successfully")
+}
+
+// @Summary		Get income per month
+// @Description	Returns the total income for each month
+// @Tags		reports
+// @Produce		json
+// @Success		200	{object} model.ApiResponse "Income per month"
+// @Failure		500	{object} model.ApiResponse "Error retrieving income per month"
+// @Router		/reports/income-per-month [get]
+func IncomePerMonth(c *gin.Context) {
+	var results []struct {
+		Month  string
+		Amount float64
+	}
+	err := database.DB.Model(&model.Order{}).
+		Select("TO_CHAR(date, 'Month YYYY') as month, SUM(total_amount) as amount").
+		Where("status = ?", "delivered").
+		Group("month").
+		Order("month").
+		Scan(&results).Error
+
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error fetching income per month")
+		return
+	}
+
+	if len(results) == 0 {
+		utils.RespondWithSuccess(c, http.StatusOK, model.IncomePerMonthDTO{}, "No income data available")
+		return
+	}
+
+	var categories []string
+	var data []float64
+	for _, result := range results {
+		categories = append(categories, result.Month)
+		data = append(data, result.Amount)
+	}
+
+	chartData := model.IncomePerMonthDTO{
+		Series: []struct {
+			Data []float64 `json:"data"`
+		}{
+			{Data: data},
+		},
+		Categories: categories,
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Income per month fetched successfully")
+}
+
+// @Summary		Get expenses per type
+// @Description	Returns the total expenses for each expense type
+// @Tags		reports
+// @Produce		json
+// @Success		200	{object} model.ApiResponse "Expenses per type"
+// @Failure		500	{object} model.ApiResponse "Error retrieving expenses per type"
+// @Router		/reports/expenses-per-type [get]
+func ExpensesPerType(c *gin.Context) {
+	var results []struct {
+		Type   string
+		Amount float64
+	}
+	err := database.DB.Model(&model.Expense{}).
+		Select("expense_types.type, SUM(expenses.amount) as amount").
+		Joins("join expense_types on expense_types.id = expenses.type_id").
+		Group("expense_types.type").
+		Scan(&results).Error
+
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error fetching expenses per type")
+		return
+	}
+
+	if len(results) == 0 {
+		utils.RespondWithSuccess(c, http.StatusOK, model.ExpensesPerTypeDTO{}, "No expense data available")
+		return
+	}
+
+	var series []float64
+	var labels []string
+	for _, result := range results {
+		series = append(series, result.Amount)
+		labels = append(labels, result.Type)
+	}
+
+	chartData := model.ExpensesPerTypeDTO{
+		Series: series,
+		Labels: labels,
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Expenses per type fetched successfully")
+}
+
+// @Summary		Get expenses per month
+// @Description	Returns the total expenses for each month
+// @Tags		reports
+// @Produce		json
+// @Success		200	{object} model.ApiResponse "Expenses per month"
+// @Failure		500	{object} model.ApiResponse "Error retrieving expenses per month"
+// @Router		/reports/expenses-per-month [get]
+func ExpensesPerMonth(c *gin.Context) {
+	var results []struct {
+		Month  string
+		Amount float64
+	}
+	err := database.DB.Model(&model.Expense{}).
+		Select("TO_CHAR(date, 'Month YYYY') as month, SUM(amount) as amount").
+		Group("month").
+		Order("month").
+		Scan(&results).Error
+
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error fetching expenses per month")
+		return
+	}
+
+	if len(results) == 0 {
+		utils.RespondWithSuccess(c, http.StatusOK, model.ExpensesPerMonthDTO{}, "No expense data available")
+		return
+	}
+
+	var categories []string
+	var data []float64
+	for _, result := range results {
+		categories = append(categories, result.Month)
+		data = append(data, result.Amount)
+	}
+
+	chartData := model.ExpensesPerMonthDTO{
+		Series: []struct {
+			Data []float64 `json:"data"`
+		}{
+			{Data: data},
+		},
+		Categories: categories,
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Expenses per month fetched successfully")
+}
+
+// @Summary		Get payment method distribution
+// @Description	Returns the distribution of payment methods used
+// @Tags		reports
+// @Produce		json
+// @Success		200	{object} model.ApiResponse "Payment method distribution"
+// @Failure		500	{object} model.ApiResponse "Error retrieving payment method distribution"
+// @Router		/reports/payment-method-distribution [get]
+func PaymentMethodDistribution(c *gin.Context) {
+	var results []struct {
+		PaymentMethod string
+		Count         int
+	}
+	err := database.DB.Model(&model.Order{}).
+		Select("details as payment_method, COUNT(*) as count").
+		Where("status = ?", "delivered").
+		Group("payment_method").
+		Scan(&results).Error
+
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error fetching payment method distribution")
+		return
+	}
+
+	if len(results) == 0 {
+		utils.RespondWithSuccess(c, http.StatusOK, model.PaymentMethodDistributionDTO{}, "No payment method data available")
+		return
+	}
+
+	var series []int
+	var labels []string
+	for _, result := range results {
+		series = append(series, result.Count)
+		labels = append(labels, result.PaymentMethod)
+	}
+
+	chartData := model.PaymentMethodDistributionDTO{
+		Series: series,
+		Labels: labels,
+	}
+
+	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Payment method distribution fetched successfully")
 }

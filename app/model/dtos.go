@@ -174,6 +174,30 @@ type TripParticipationDTO struct {
 	Labels []string `json:"labels"`
 }
 
+type IncomePerMonthDTO struct {
+	Series []struct {
+		Data []float64 `json:"data"`
+	} `json:"series"`
+	Categories []string `json:"categories"`
+}
+
+type ExpensesPerTypeDTO struct {
+	Series []float64 `json:"series"`
+	Labels []string  `json:"labels"`
+}
+
+type ExpensesPerMonthDTO struct {
+	Series []struct {
+		Data []float64 `json:"data"`
+	} `json:"series"`
+	Categories []string `json:"categories"`
+}
+
+type PaymentMethodDistributionDTO struct {
+	Series []int    `json:"series"`
+	Labels []string `json:"labels"`
+}
+
 type ApiResponse struct {
 	Success bool     `json:"success"`
 	Message string   `json:"message"`
