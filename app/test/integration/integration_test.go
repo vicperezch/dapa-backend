@@ -99,7 +99,7 @@ func loginAndGetToken(t *testing.T, router *gin.Engine, email, password string) 
 // createTestAdmin crea un usuario admin para testing
 func createTestAdmin(t *testing.T, db *gorm.DB) model.User {
 	adminPassword := "supersecret123"
-	hashedPassword, err := utils.HashString(adminPassword)
+	hashedPassword, err := utils.HashPassword(adminPassword)
 	assert.NoError(t, err)
 
 	admin := model.User{
@@ -444,4 +444,3 @@ func TestAuthentication_Flow(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
-

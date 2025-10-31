@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"dapa/app/model"
 	"dapa/app/routes"
@@ -26,13 +27,19 @@ import (
 func main() {
 	router := gin.Default()
 
+	router.SetTrustedProxies(nil)
+
 	// Configuración del middleware de CORS
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
+		AllowOrigins: []string{
+			"http://localhost:5173",
+			"https://dapa.lat",
+		},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
 	}))
 
 	// Validaciones personalizadas
@@ -49,13 +56,11 @@ func main() {
 
 	database.ConnectToDatabase()
 
-	// Crear usuario administrador de prueba
-	if err := CreateFirstAdmin(); err != nil {
-		log.Fatal("Error creating initial admin: ", err)
-	}
 	SeedQuestionTypes()
 
 	routes.SetupRoutes(router)
+
+	CreateFirstAdmin()
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -71,7 +76,7 @@ func CreateFirstAdmin() error {
 		return nil
 	}
 
-	hashedPassword, err := utils.HashString("dapa12345")
+	hashedPassword, err := utils.HashPassword("dapa12345")
 	if err != nil {
 		return err
 	}

@@ -32,7 +32,7 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	passwordHash, err := utils.HashString(req.Password)
+	passwordHash, err := utils.HashPassword(req.Password)
 	if err != nil {
 		utils.RespondWithInternalError(c, "Eror registering user")
 		return
@@ -137,7 +137,7 @@ func ForgotPasswordHandler(c *gin.Context) {
 	}
 
 	// Hashear el token y almacenar en la base de datos
-	hash, _ := utils.HashString(token)
+	hash := utils.HashToken(token)
 	expiry := time.Now().Add(30 * time.Minute)
 	resetToken := model.ResetToken{
 		Token:  hash,
@@ -183,7 +183,7 @@ func ResetPasswordHandler(c *gin.Context) {
 		return
 	}
 
-	hash, _ := utils.HashString(req.Token)
+	hash := utils.HashToken(req.Token)
 
 	var resetToken model.ResetToken
 	var user model.User
@@ -200,7 +200,7 @@ func ResetPasswordHandler(c *gin.Context) {
 		return
 	}
 
-	paswordHash, err := utils.HashString(req.NewPassword)
+	paswordHash, err := utils.HashPassword(req.NewPassword)
 	if err != nil {
 		utils.RespondWithInternalError(c, "Error resetting password")
 		return
