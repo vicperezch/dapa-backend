@@ -23,6 +23,7 @@ type VehicleDTO struct {
 type OrderDTO struct {
 	UserID      *uint   `json:"userId"`
 	VehicleID   *uint   `json:"vehicleId"`
+	HelperID	*uint   `json:"helperId"`
 	ClientName  string  `json:"clientName" binding:"required"`
 	ClientPhone string  `json:"clientPhone" binding:"required"`
 	Origin      string  `json:"origin" binding:"required"`
@@ -70,6 +71,7 @@ type AcceptSubmissionDTO struct {
 type AssignOrderDTO struct {
 	UserID    uint `json:"userId" binding:"required"`
 	VehicleID uint `json:"vehicleId" binding:"required"`
+	HelperID  uint `json:"helperId" binding:"required"`
 }
 
 type OrderStatusDTO struct {

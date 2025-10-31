@@ -50,6 +50,7 @@ func CreateOrderHandler(c *gin.Context) {
 			SubmissionID: req.SubmissionID,
 			UserID:       nil,
 			VehicleID:    nil,
+			HelperID:     nil,
 			ClientName:   req.ClientName,
 			ClientPhone:  req.ClientPhone,
 			Origin:       req.Origin,
@@ -87,7 +88,7 @@ func CreateOrderHandler(c *gin.Context) {
 }
 
 // @Summary		Get all orders in the system
-// @Description	Returns a list of all orders, if the user is a driver it returns only their associated orders
+// @Description	Returns a list of all orders, if the user is a driver or helper it returns only their associated orders
 // @Tags		orders
 // @Produce		json
 // @Param       status query string false "Order status"
@@ -104,7 +105,6 @@ func GetOrdersHandler(c *gin.Context) {
 	if claims.Role == "admin" {
 		if status == "" {
 			err = database.DB.Find(&orders).Error
-
 		} else {
 			err = database.DB.Where("status = ?", status).Find(&orders).Error
 		}
@@ -118,13 +118,29 @@ func GetOrdersHandler(c *gin.Context) {
 		return
 	}
 
-	err = database.DB.Where("user_id = ?", claims.UserID).Find(&orders).Error
-	if err != nil {
-		utils.RespondWithInternalError(c, "Error fetching orders")
+	if claims.Role == "driver" {
+		err = database.DB.Where("user_id = ?", claims.UserID).Find(&orders).Error
+		if err != nil {
+			utils.RespondWithInternalError(c, "Error fetching orders")
+			return
+		}
+
+		utils.RespondWithSuccess(c, http.StatusOK, orders, "Orders fetched successfully")
 		return
 	}
 
-	utils.RespondWithSuccess(c, http.StatusOK, orders, "Orders fetched successfully")
+	if claims.Role == "helper" {
+		err = database.DB.Where("helper_id = ?", claims.UserID).Find(&orders).Error
+		if err != nil {
+			utils.RespondWithInternalError(c, "Error fetching orders")
+			return
+		}
+
+		utils.RespondWithSuccess(c, http.StatusOK, orders, "Orders fetched successfully")
+		return
+	}
+
+	utils.RespondWithUnathorizedError(c)
 }
 
 // @Summary		Get one order by ID
@@ -204,6 +220,10 @@ func UpdateOrderHandler(c *gin.Context) {
 		order.VehicleID = req.VehicleID
 	}
 
+	if req.HelperID != nil {
+		order.HelperID = req.HelperID
+	}
+
 	if req.Details != nil {
 		order.Details = *req.Details
 	}
@@ -252,6 +272,7 @@ func AssignOrderHandler(c *gin.Context) {
 
 	order.UserID = &req.UserID
 	order.VehicleID = &req.VehicleID
+	order.HelperID = &req.HelperID
 	order.Status = "assigned"
 
 	err = database.DB.Save(&order).Error

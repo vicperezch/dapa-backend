@@ -56,6 +56,7 @@ type Order struct {
 	SubmissionID uint      `json:"submissionId"`
 	UserID       *uint     `json:"userId,omitempty" gorm:"default:null"`
 	VehicleID    *uint     `json:"vehicleId,omitempty" gorm:"default:null"`
+	HelperID     *uint     `json:"helperId,omitempty" gorm:"default:null"`
 	ClientName   string    `json:"clientName"`
 	ClientPhone  string    `json:"clientPhone"`
 	Origin       string    `json:"origin" gorm:"size:100;not null"`
