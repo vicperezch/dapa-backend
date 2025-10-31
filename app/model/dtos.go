@@ -183,7 +183,7 @@ type IncomePerMonthDTO struct {
 
 type ExpensesPerTypeDTO struct {
 	Series []float64 `json:"series"`
-	Labels []string  `json:"labels"`
+	Labels []string  `json:"categories"`
 }
 
 type ExpensesPerMonthDTO struct {
@@ -195,7 +195,7 @@ type ExpensesPerMonthDTO struct {
 
 type PaymentMethodDistributionDTO struct {
 	Series []int    `json:"series"`
-	Labels []string `json:"labels"`
+	Labels []string `json:"categories"`
 }
 
 type ExpenseTypeDTO struct {

@@ -96,10 +96,10 @@ func SetupRoutes(router *gin.Engine) {
 		admin.GET("/reports/drivers-trip-participation", handlers.DriversTripParticipationChart)
 
 		// REPORTE: Gráficas financieras
-		admin.GET("/reports/income-per-month", handlers.IncomePerMonth)
-		admin.GET("/reports/expenses-per-type", handlers.ExpensesPerType)
-		admin.GET("/reports/expenses-per-month", handlers.ExpensesPerMonth)
-		admin.GET("/reports/payment-method-distribution", handlers.PaymentMethodDistribution)
+		admin.GET("/reports/financial/monthly", handlers.IncomePerMonth)
+		admin.GET("/reports/expenses/grouped", handlers.ExpensesPerType)
+		admin.GET("/reports/expenses/monthly", handlers.ExpensesPerMonth)
+		admin.GET("/reports/expenses/methods", handlers.PaymentMethodDistribution)
 
 		// ENTIDADES: Tipos de Gasto
 		admin.GET("/expense-types", handlers.GetExpenseTypes)
