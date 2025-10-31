@@ -193,9 +193,9 @@ type ExpensesPerMonthDTO struct {
 	Categories []string `json:"categories"`
 }
 
-type PaymentMethodDistributionDTO struct {
+type OrderTypeDistributionDTO struct {
 	Series []int    `json:"series"`
-	Labels []string `json:"categories"`
+	Categories []string `json:"categories"`
 }
 
 type ExpenseTypeDTO struct {

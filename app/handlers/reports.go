@@ -639,45 +639,45 @@ func ExpensesPerMonth(c *gin.Context) {
 	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Expenses per month fetched successfully")
 }
 
-// @Summary		Get payment method distribution
-// @Description	Returns the distribution of payment methods used
+// @Summary		Get order type distribution
+// @Description	Returns the distribution of order types
 // @Tags		reports
 // @Produce		json
-// @Success		200	{object} model.ApiResponse "Payment method distribution"
-// @Failure		500	{object} model.ApiResponse "Error retrieving payment method distribution"
-// @Router		/reports/payment-method-distribution [get]
-func PaymentMethodDistribution(c *gin.Context) {
+// @Success		200	{object} model.ApiResponse "Order type distribution"
+// @Failure		500	{object} model.ApiResponse "Error retrieving order type distribution"
+// @Router		/reports/order-type-distribution [get]
+func OrderTypeDistribution(c *gin.Context) {
 	var results []struct {
-		PaymentMethod string
-		Count         int
+		OrderType string `json:"order_type"`
+		Count     int    `json:"count"`
 	}
 	err := database.DB.Model(&model.Order{}).
-		Select("details as payment_method, COUNT(*) as count").
+		Select("type as order_type, COUNT(*) as count").
 		Where("status = ?", "delivered").
-		Group("payment_method").
+		Group("type").
 		Scan(&results).Error
 
 	if err != nil {
-		utils.RespondWithInternalError(c, "Error fetching payment method distribution")
+		utils.RespondWithInternalError(c, "Error fetching order type distribution")
 		return
 	}
 
 	if len(results) == 0 {
-		utils.RespondWithSuccess(c, http.StatusOK, model.PaymentMethodDistributionDTO{}, "No payment method data available")
+		utils.RespondWithSuccess(c, http.StatusOK, model.OrderTypeDistributionDTO{}, "No order type data available")
 		return
 	}
 
 	var series []int
-	var labels []string
+	var categories []string
 	for _, result := range results {
 		series = append(series, result.Count)
-		labels = append(labels, result.PaymentMethod)
+		categories = append(categories, result.OrderType)
 	}
 
-	chartData := model.PaymentMethodDistributionDTO{
+	chartData := model.OrderTypeDistributionDTO{
 		Series: series,
-		Labels: labels,
+		Categories: categories,
 	}
 
-	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Payment method distribution fetched successfully")
+	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Order type distribution fetched successfully")
 }
