@@ -153,7 +153,7 @@ type CompletedQuotationsDTO struct {
 
 type QuotationsStatusDTO struct {
 	Series []float64 `json:"series"`
-	Labels []string  `json:"labels"`
+	Categories []string  `json:"categories"`
 }
 
 type DriverPerformanceDTO struct {

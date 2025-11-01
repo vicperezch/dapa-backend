@@ -122,7 +122,6 @@ type Answer struct {
 	Options      []QuestionOption `json:"options,omitempty" gorm:"many2many:answer_options;"`
 }
 
-// ******************** FINANZAS ********************
 type ExpenseType struct {
 	ID   uint   `json:"id" gorm:"primaryKey"`
 	Type string `json:"type" gorm:"not null;size:25"`
@@ -136,4 +135,14 @@ type Expense struct {
 	TemporalEmployee bool        `json:"temporalEmployee" gorm:"not null;column:temporal_employee"`
 	Description      string      `json:"description" gorm:"size:255"`
 	Amount           float64     `json:"amount" gorm:"not null" validate:"gt=0"`
+}
+
+type PerformanceGoal struct {
+	ID                   uint      `json:"id" gorm:"primaryKey"`
+	OrderGoal            int       `json:"orderGoal" gorm:"not null"`
+	UtilityGoal          float64   `json:"utilityGoal" gorm:"not null"`
+	AveragePerOrderGoal  float64   `json:"averagePerOrderGoal" gorm:"not null"`
+	TravelGoal           int       `json:"travelGoal" gorm:"not null"`
+	DeliveryGoal         float64   `json:"deliveryGoal" gorm:"not null"`
+	AchievementRateGoal  float64   `json:"achievementRateGoal" gorm:"not null"`
 }

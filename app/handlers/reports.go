@@ -268,7 +268,7 @@ func QuotationsStatusChart(c *gin.Context) {
 
 	chartData := model.QuotationsStatusDTO{
 		Series: series,
-		Labels: labels,
+		Categories: labels,
 	}
 
 	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Quotations status chart data fetched successfully")
@@ -282,6 +282,10 @@ func QuotationsStatusChart(c *gin.Context) {
 // @Failure		500	{object} model.ApiResponse "Error retrieving drivers performance chart data"
 // @Router		/reports/drivers-performance [get]
 func DriversPerformanceChart(c *gin.Context) {
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Nanosecond)
+
 	var drivers []model.User
 	err := database.DB.Where("role = ?", "driver").Find(&drivers).Error
 	if err != nil {
@@ -290,30 +294,32 @@ func DriversPerformanceChart(c *gin.Context) {
 	}
 
 	var categories []string
-	var deliveredData []int
-	var pendingData []int
+	var completedTripsData []int
+	var fulfillmentRateData []float64
 
 	for _, driver := range drivers {
 		categories = append(categories, driver.Name+" "+driver.LastName)
 
 		var deliveredCount int64
-		database.DB.Model(&model.Order{}).Where("user_id = ? AND status = ?", driver.ID, "delivered").Count(&deliveredCount)
-		deliveredData = append(deliveredData, int(deliveredCount))
+		database.DB.Model(&model.Order{}).Where("user_id = ? AND status = ? AND date BETWEEN ? AND ?", driver.ID, "delivered", startOfMonth, endOfMonth).Count(&deliveredCount)
+		completedTripsData = append(completedTripsData, int(deliveredCount))
 
 		var pendingCount int64
-		database.DB.Model(&model.Order{}).Where("user_id = ? AND status = ?", driver.ID, "pending").Count(&pendingCount)
-		pendingData = append(pendingData, int(pendingCount))
+		database.DB.Model(&model.Order{}).Where("user_id = ? AND status = ? AND date BETWEEN ? AND ?", driver.ID, "pending", startOfMonth, endOfMonth).Count(&pendingCount)
+
+		var fulfillmentRate float64
+		if deliveredCount+pendingCount > 0 {
+			fulfillmentRate = (float64(deliveredCount) / float64(deliveredCount+pendingCount)) * 100
+		}
+		fulfillmentRateData = append(fulfillmentRateData, fulfillmentRate)
 	}
 
-	chartData := model.DriversBarDataDTO{
-		Series: []struct {
-			Name string `json:"name"`
-			Data []int  `json:"data"`
-		}{
-			{Name: "delivered", Data: deliveredData},
-			{Name: "pending", Data: pendingData},
+	chartData := gin.H{
+		"series": []gin.H{
+			{"name": "Viajes completados", "data": completedTripsData},
+			{"name": "Tasa de cumplimiento", "data": fulfillmentRateData},
 		},
-		Categories: categories,
+		"categories": categories,
 	}
 
 	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Drivers performance chart data fetched successfully")
@@ -327,6 +333,10 @@ func DriversPerformanceChart(c *gin.Context) {
 // @Failure		500	{object} model.ApiResponse "Error retrieving drivers trip participation chart data"
 // @Router		/reports/drivers-trip-participation [get]
 func DriversTripParticipationChart(c *gin.Context) {
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Nanosecond)
+
 	var results []struct {
 		Driver string
 		Count  int
@@ -334,7 +344,7 @@ func DriversTripParticipationChart(c *gin.Context) {
 	err := database.DB.Model(&model.Order{}).
 		Select("users.name || ' ' || users.last_name as driver, COUNT(*) as count").
 		Joins("join users on users.id = orders.user_id").
-		Where("orders.status = ?", "delivered").
+		Where("orders.status = ? AND orders.date BETWEEN ? AND ?", "delivered", startOfMonth, endOfMonth).
 		Group("driver").
 		Scan(&results).Error
 
@@ -344,15 +354,15 @@ func DriversTripParticipationChart(c *gin.Context) {
 	}
 
 	var series []int
-	var labels []string
+	var categories []string
 	for _, result := range results {
 		series = append(series, result.Count)
-		labels = append(labels, result.Driver)
+		categories = append(categories, result.Driver)
 	}
 
-	chartData := model.TripParticipationDTO{
-		Series: series,
-		Labels: labels,
+	chartData := gin.H{
+		"series":     series,
+		"categories": categories,
 	}
 
 	utils.RespondWithSuccess(c, http.StatusOK, chartData, "Drivers trip participation chart data fetched successfully")

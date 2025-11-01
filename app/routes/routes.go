@@ -81,25 +81,31 @@ func SetupRoutes(router *gin.Engine) {
 		admin.GET("form/submissions", handlers.GetSubmissionsHandler)
 		admin.PATCH("form/submissions/:id/status", handlers.UpdateSubmissionStatusHandler)
 
-		// REPORTE: Financiero (detallado)
+		// REPORTE: Financiero 
 		admin.GET("/reports/financial", handlers.FinancialReport)
 		admin.GET("/reports/financial/date", handlers.FinancialReportByDate)
 		admin.GET("/reports/drivers", handlers.DriversReport)
 		admin.GET("/reports/income", handlers.TotalIncomeReport)
 		admin.GET("/reports/financial-control-income", handlers.FinancialControlIncome)
 		admin.GET("/reports/financial-control-spending", handlers.FinancialControlSpending)
+		
+		// KPIs
+		admin.GET("/kpi/current", handlers.GetCurrentKPIs)
+		admin.GET("/kpi/goals", handlers.GetPerformanceGoal)
+		admin.PUT("/kpi/goals", handlers.UpsertPerformanceGoal)
 
-		// REPORTE: Gráficas desempsño
+		// REPORTE: Gráficas desempeño
 		admin.GET("/reports/completed-quotations", handlers.CompletedQuotationsChart)
 		admin.GET("/reports/quotations-status", handlers.QuotationsStatusChart)
 		admin.GET("/reports/drivers-performance", handlers.DriversPerformanceChart)
-		admin.GET("/reports/drivers-trip-participation", handlers.DriversTripParticipationChart)
+		admin.GET("/reports/drivers-participation", handlers.DriversTripParticipationChart)
 
 		// REPORTE: Gráficas financieras
 		admin.GET("/reports/financial/monthly", handlers.IncomePerMonth)
 		admin.GET("/reports/expenses/grouped", handlers.ExpensesPerType)
 		admin.GET("/reports/expenses/monthly", handlers.ExpensesPerMonth)
 		admin.GET("/reports/financial/order-type", handlers.OrderTypeDistribution)
+
 		// ENTIDADES: Tipos de Gasto
 		admin.GET("/expense-types", handlers.GetExpenseTypes)
 		admin.POST("/expense-types", handlers.CreateExpenseType)
@@ -113,5 +119,6 @@ func SetupRoutes(router *gin.Engine) {
 		admin.GET("/expenses/:id", handlers.GetExpense)
 		admin.PUT("/expenses/:id", handlers.UpdateExpense)
 		admin.DELETE("/expenses/:id", handlers.DeleteExpense)
+
 	}
 }
