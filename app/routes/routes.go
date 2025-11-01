@@ -106,5 +106,12 @@ func SetupRoutes(router *gin.Engine) {
 		admin.GET("/expense-types/:id", handlers.GetExpenseType)
 		admin.PUT("/expense-types/:id", handlers.UpdateExpenseType)
 		admin.DELETE("/expense-types/:id", handlers.DeleteExpenseType)
+
+		// ENTIDADES: Gastos
+		admin.GET("/expenses", handlers.GetExpenses)
+		admin.POST("/expenses", handlers.CreateExpense)
+		admin.GET("/expenses/:id", handlers.GetExpense)
+		admin.PUT("/expenses/:id", handlers.UpdateExpense)
+		admin.DELETE("/expenses/:id", handlers.DeleteExpense)
 	}
 }

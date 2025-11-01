@@ -204,6 +204,14 @@ type ExpenseTypeDTO struct {
 	Type string `json:"type" binding:"required,max=25"`
 }
 
+type ExpenseDTO struct {
+	Date             time.Time `json:"date" binding:"required"`
+	TypeID           uint      `json:"typeId" binding:"required"`
+	TemporalEmployee bool      `json:"temporalEmployee"`
+	Description      string    `json:"description" binding:"required,max=255"`
+	Amount           float64   `json:"amount" binding:"required,gt=0"`
+}
+
 type ApiResponse struct {
 	Success bool     `json:"success"`
 	Message string   `json:"message"`
