@@ -60,8 +60,6 @@ func main() {
 
 	routes.SetupRoutes(router)
 
-	CreateFirstAdmin()
-
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	router.Run(":8080")
