@@ -53,6 +53,7 @@ func CreateQuestionHandler(c *gin.Context) {
 		TypeID:      req.TypeID,
 		IsActive:    req.IsActive != nil || *req.IsActive,
 		IsRequired: req.IsRequired != nil || *req.IsRequired,
+		IsMutable: true,
 		Position:    maxPos + 1, // nueva pregunta al final
 	}
 
