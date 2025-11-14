@@ -31,6 +31,7 @@ type OrderDTO struct {
 	TotalAmount float64 `json:"totalAmount" binding:"required"`
 	Details     *string `json:"details"`
 	Type        string  `json:"type" binding:"required"`
+	MeetingDate time.Time `json:"meetingDate" binding:"required"`
 }
 
 type LoginDTO struct {
@@ -66,6 +67,7 @@ type AcceptSubmissionDTO struct {
 	TotalAmount  float64 `json:"totalAmount" binding:"required"`
 	Details      string  `json:"details" binding:"required"`
 	Type         string  `json:"type" binding:"required"`
+	MeetingDate  time.Time `json:"meetingDate" binding:"required"`
 }
 
 type AssignOrderDTO struct {

@@ -60,6 +60,7 @@ func CreateOrderHandler(c *gin.Context) {
 			Status:       "pending",
 			Type:         req.Type,
 			Date:         currentDate,
+			MeetingDate:  req.MeetingDate,
 		}
 		txErr = gorm.G[model.Order](tx).Create(ctx, &order)
 		if txErr != nil {
@@ -211,6 +212,7 @@ func UpdateOrderHandler(c *gin.Context) {
 	order.Destination = req.Destination
 	order.TotalAmount = req.TotalAmount
 	order.Type = req.Type
+	order.MeetingDate = req.MeetingDate
 
 	if req.UserID != nil {
 		order.UserID = req.UserID

@@ -66,6 +66,7 @@ type Order struct {
 	Status       string    `json:"status" gorm:"default:pending"`
 	Type         string    `json:"type" gorm:"not null"`
 	Date         time.Time `json:"date" gorm:"type:date"`
+	MeetingDate  time.Time `json:"meetingDate" gorm:"type:date;not null"`
 }
 
 type OrderToken struct {
