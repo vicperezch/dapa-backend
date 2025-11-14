@@ -91,6 +91,7 @@ type Question struct {
 	IsActive    bool             `json:"isActive" gorm:"not null;default:true"`
 	Position    int              `json:"position" gorm:"not null;default:1"`
 	IsRequired bool			 `json:"isRequired" gorm:"not null;default:true"`
+	IsMutable   bool             `json:"isMutable" gorm:"not null;default:true"`
 	Type        QuestionType     `json:"type" gorm:"foreignKey:TypeID"`
 	Options     []QuestionOption `json:"options,omitempty" gorm:"foreignKey:QuestionID"`
 	DeletedAt   gorm.DeletedAt   `json:"deletedAt" gorm:"index"`

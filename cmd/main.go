@@ -59,6 +59,7 @@ func main() {
 	database.ConnectToDatabase()
 
 	SeedQuestionTypes()
+	SeedQuestions()
 
 	routes.SetupRoutes(router)
 
@@ -110,4 +111,80 @@ func SeedQuestionTypes() {
 			log.Printf("Question type '%s' already exists with ID: %d", typeName, existingType.ID)
 		}
 	}
+}
+
+func SeedQuestions() {
+	var textType model.QuestionType
+	
+	database.DB.Where("type = ?", "text").First(&textType)
+
+	questions := []struct {
+		question    string
+		description *string
+		typeID      uint
+		position    int
+		isRequired  bool
+	}{
+		{
+			question:    "¿Cuál es tu nombre?",
+			description: stringPtr("Por favor ingresa tu nombre y apellidos"),
+			typeID:      textType.ID,
+			position:    1,
+			isRequired:  true,
+		},
+		{
+			question:    "¿Cuál es tu número de teléfono?",
+			description: stringPtr("Por favor escribe tu número de teléfono"),
+			typeID:      textType.ID,
+			position:    2,
+			isRequired:  true,
+		},
+		{
+			question:    "¿Cuál es el lugar de origen?",
+			description: stringPtr("Escribe el lugar de origen"),
+			typeID:      textType.ID,
+			position:    3,
+			isRequired:  true,
+		},
+		{
+			question:    "¿Cuál es el lugar de destino?",
+			description: stringPtr("Escribe el lugar de destino"),
+			typeID:      textType.ID,
+			position:    4,
+			isRequired:  true,
+		},
+	}
+
+	for _, q := range questions {
+		var existingQuestion model.Question
+		result := database.DB.Where("question = ?", q.question).First(&existingQuestion)
+
+		if result.Error != nil {
+			newQuestion := model.Question{
+				Question:    q.question,
+				Description: q.description,
+				TypeID:      q.typeID,
+				IsActive:    true,
+				Position:    q.position,
+				IsRequired:  q.isRequired,
+			}
+			
+			if err := database.DB.Create(&newQuestion).Error; err != nil {
+				log.Printf("Error creating question '%s': %v", q.question, err)
+			} else {
+				database.DB.Model(&newQuestion).Update("is_mutable", false)
+				log.Printf("Question '%s' created with ID: %d (immutable)", q.question, newQuestion.ID)
+			}
+		} else {
+			if err := database.DB.Model(&existingQuestion).Update("is_mutable", false).Error; err != nil {
+				log.Printf("Error updating question '%s': %v", q.question, err)
+			} else {
+				log.Printf("Question '%s' updated to immutable (ID: %d)", q.question, existingQuestion.ID)
+			}
+		}
+	}
+}
+
+func stringPtr(s string) *string {
+	return &s
 }
