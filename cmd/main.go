@@ -115,7 +115,7 @@ func SeedQuestionTypes() {
 
 func SeedQuestions() {
 	var textType model.QuestionType
-	
+
 	database.DB.Where("type = ?", "text").First(&textType)
 
 	questions := []struct {
@@ -168,7 +168,7 @@ func SeedQuestions() {
 				Position:    q.position,
 				IsRequired:  q.isRequired,
 			}
-			
+
 			if err := database.DB.Create(&newQuestion).Error; err != nil {
 				log.Printf("Error creating question '%s': %v", q.question, err)
 			} else {
