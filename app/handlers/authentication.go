@@ -152,8 +152,8 @@ func ForgotPasswordHandler(c *gin.Context) {
 		return
 	}
 
-	link := "http://localhost:5173/reset-password?token=" + token
-	emailContent := fmt.Sprintf("<p>Puedes actualizar tu contraseña a través del siguiente link:</p><a href=\"%s\">%s</a>", link, link)
+	link := "http://dapa.lat/reset-password?token=" + token
+	emailContent := fmt.Sprintf("<p>Puedes actualizar tu contraseña a través del siguiente link:</p><a href=\"%s\">%s</a><br>br>De Aquí Para Allá.", link, link)
 
 	err = utils.SendEmail(user.Email, "Reestablecimiento de contraseña", emailContent)
 	if err != nil {
