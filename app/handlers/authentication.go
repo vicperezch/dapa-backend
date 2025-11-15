@@ -4,7 +4,9 @@ import (
 	"dapa/app/model"
 	"dapa/app/utils"
 	"dapa/database"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -32,9 +34,42 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
+	// VERIFICACIÓN DE CORREOS ELECTRÓNICOS
+	verificationApi := "https://api.emailable.com/v1/verify"
+	client := &http.Client{}
+
+	verificationReq, err := http.NewRequest("GET", verificationApi, nil)
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error registering user")
+		return
+	}
+
+	q := verificationReq.URL.Query()
+	q.Add("email", req.Email)
+	q.Add("api_key", utils.EnvMustGet("VERIFICATION_KEY"))
+	verificationReq.URL.RawQuery = q.Encode()
+
+	resp, err := client.Do(verificationReq)
+	if err != nil {
+		utils.RespondWithInternalError(c, "Error registering user")
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Println(string(body))
+
+	var verificationResult model.VerificationResponse
+	json.Unmarshal(body, &verificationResult)
+
+	if verificationResult.State != "deliverable" {
+		utils.RespondWithCustomError(c, http.StatusBadRequest, "Invalid email", "Could not register email")
+		return
+	}
+
 	passwordHash, err := utils.HashPassword(req.Password)
 	if err != nil {
-		utils.RespondWithInternalError(c, "Eror registering user")
+		utils.RespondWithInternalError(c, "Error registering user")
 		return
 	}
 
@@ -152,8 +187,8 @@ func ForgotPasswordHandler(c *gin.Context) {
 		return
 	}
 
-	link := "http://localhost:5173/reset-password?token=" + token
-	emailContent := fmt.Sprintf("<p>Puedes actualizar tu contraseña a través del siguiente link:</p><a href=\"%s\">%s</a>", link, link)
+	link := "http://dapa.lat/reset-password?token=" + token
+	emailContent := fmt.Sprintf("<p>Puedes actualizar tu contraseña a través del siguiente link:</p><a href=\"%s\">%s</a><br>br>De Aquí Para Allá.", link, link)
 
 	err = utils.SendEmail(user.Email, "Reestablecimiento de contraseña", emailContent)
 	if err != nil {

@@ -13,6 +13,11 @@ const (
 	FormStatusApproved  FormStatus = "approved"
 )
 
+type VerificationResponse struct {
+	AcceptAll bool   `json:"accept_all"`
+	State     string `json:"state"`
+}
+
 // ******************** ENTIDADES ********************
 type User struct {
 	ID                    uint       `json:"id" gorm:"primaryKey"`
@@ -91,7 +96,7 @@ type Question struct {
 	TypeID      uint             `json:"typeId" gorm:"not null" validate:"required,gt=0"`
 	IsActive    bool             `json:"isActive" gorm:"not null;default:true"`
 	Position    int              `json:"position" gorm:"not null;default:1"`
-	IsRequired bool			 `json:"isRequired" gorm:"not null;default:true"`
+	IsRequired  bool             `json:"isRequired" gorm:"not null;default:true"`
 	IsMutable   bool             `json:"isMutable" gorm:"not null;default:true"`
 	Type        QuestionType     `json:"type" gorm:"foreignKey:TypeID"`
 	Options     []QuestionOption `json:"options,omitempty" gorm:"foreignKey:QuestionID"`
@@ -140,11 +145,11 @@ type Expense struct {
 }
 
 type PerformanceGoal struct {
-	ID                   uint      `json:"id" gorm:"primaryKey"`
-	OrderGoal            int       `json:"orderGoal" gorm:"not null"`
-	UtilityGoal          float64   `json:"utilityGoal" gorm:"not null"`
-	AveragePerOrderGoal  float64   `json:"averagePerOrderGoal" gorm:"not null"`
-	TravelGoal           int       `json:"travelGoal" gorm:"not null"`
-	DeliveryGoal         float64   `json:"deliveryGoal" gorm:"not null"`
-	AchievementRateGoal  float64   `json:"achievementRateGoal" gorm:"not null"`
+	ID                  uint    `json:"id" gorm:"primaryKey"`
+	OrderGoal           int     `json:"orderGoal" gorm:"not null"`
+	UtilityGoal         float64 `json:"utilityGoal" gorm:"not null"`
+	AveragePerOrderGoal float64 `json:"averagePerOrderGoal" gorm:"not null"`
+	TravelGoal          int     `json:"travelGoal" gorm:"not null"`
+	DeliveryGoal        float64 `json:"deliveryGoal" gorm:"not null"`
+	AchievementRateGoal float64 `json:"achievementRateGoal" gorm:"not null"`
 }
